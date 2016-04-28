@@ -1,3 +1,11 @@
+# Debug files
+Megaboggle/Debug/
+Debug/*
+
+# Random files
+Megaboggle.VC.VC.opendb
+Megaboggle.VC.db
+
 # Compiled Object files
 *.slo
 *.lo
