@@ -3,8 +3,8 @@
 class Timer
 {
 public:
-	Timer();
-	long stop();
+    Timer();
+    long long stop();
 private:
-	long mStartTime;
+    long long mStartTime;
 };
