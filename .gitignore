@@ -6,6 +6,11 @@ Debug/
 # Visual Studio
 .vs/
 *.vcxproj*
+*.gitattributes
+*.sdf
+*.opensdf
+*.sln
+*.suo
 
 # Random files
 Megaboggle.VC.VC.opendb
