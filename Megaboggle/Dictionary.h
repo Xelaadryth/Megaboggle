@@ -23,8 +23,11 @@ public:
 	~Dictionary();
 
 	bool addWord(std::string word);
-	void removeChild(const DictionaryNode* child);
 
 private:
 	DictionaryNode* mRoot;
+	static int CharToIndex(const char c);
+	static char IndexToChar(int index);
+
+	void removeNode(DictionaryNode* node);
 };
