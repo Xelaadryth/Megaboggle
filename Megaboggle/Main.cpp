@@ -31,7 +31,58 @@ int main(int argc, char** argv)
 	_getch();
 
 	Timer solveTimer;
-	//TODO: Solve board
+	//TODO: Solve board-----------------
+	const DictionaryNode* root = dictionary.getRoot();
+	DictionaryNode* node;
+	printf("%d ", root->mChildrenCount); //26
+	node = dictionary.getChild(root, 'a');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d ", node->mChildrenCount);
+	node = dictionary.getChild(node, 'v');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d ", node->mChildrenCount);
+	node = dictionary.getChild(node, 'i');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d ", node->mChildrenCount);
+	node = dictionary.getChild(node, 'd');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d ", node->mChildrenCount); //2
+	node = dictionary.getChild(node, 'i');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d ", node->mChildrenCount);
+	node = dictionary.getChild(node, 'n');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d \n", node->mChildrenCount);
+
+	dictionary.removeWord(node);
+
+	printf("%d ", root->mChildrenCount);
+	node = dictionary.getChild(root, 'a');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d ", node->mChildrenCount);
+	node = dictionary.getChild(node, 'v');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d ", node->mChildrenCount);
+	node = dictionary.getChild(node, 'i');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d ", node->mChildrenCount);
+	node = dictionary.getChild(node, 'd');
+	if (node->mIsWord)
+		printf("MAWR");
+	printf("%d ", node->mChildrenCount); //1
+	node = dictionary.getChild(node, 'i');
+	if (!node)
+		printf("END");
+	//----------------------------------
 	printf("Solved in %li milliseconds.\n", solveTimer.stop());
 	_getch();
 

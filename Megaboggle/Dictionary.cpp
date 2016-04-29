@@ -4,6 +4,8 @@
 #include <string>
 #include "Dictionary.h"
 
+#define MIN_WORD_LENGTH 3
+
 DictionaryNode::DictionaryNode(DictionaryNode* parent, char value) :
 	mParent(parent),
 	mValue(value),
@@ -42,9 +44,21 @@ Dictionary::~Dictionary()
 	delete mRoot;
 }
 
+const DictionaryNode * Dictionary::getRoot()
+{
+	return mRoot;
+}
+
 bool Dictionary::addWord(std::string wordString)
 {
 	size_t wordLength = wordString.length();
+
+	// Filter out any words that are less than 3 letters
+	if (wordLength < MIN_WORD_LENGTH)
+	{
+		return false;
+	}
+
 	const char* word = wordString.c_str();
 
 	//Filter out anything that isn't just letters
@@ -60,39 +74,56 @@ bool Dictionary::addWord(std::string wordString)
 	//Construct our structs one letter at a time
 	for (int i = 0; i < wordLength; ++i)
 	{
-		//Convert our char to an integer value so we can use it as an index
-		int letterIndex = CharToIndex(word[i]);
+		//Get the index of the next letter
+		int letterIndex = charToIndex(word[i]);
 
+		//Create the next node if it doesn't already exist
 		if (!curNode->mChildren[letterIndex])
 		{
-			curNode->mChildren[letterIndex] = new DictionaryNode(curNode, word[i]);
-			curNode->mChildrenCount = curNode->mChildrenCount + 1;
+			curNode->mChildren[charToIndex(word[i])] = new DictionaryNode(curNode, word[i]);
+			++(curNode->mChildrenCount);
 		}
 		curNode = curNode->mChildren[letterIndex];
 	}
 
+	//The last node must be marked as a word
+	curNode->mIsWord = true;
+
 	return true;
 }
 
-int Dictionary::CharToIndex(const char c)
+DictionaryNode* Dictionary::getChild(const DictionaryNode* parent, const char value)
+{
+	return parent->mChildren[charToIndex(value)];
+}
+
+int Dictionary::charToIndex(char c)
 {
 	return (int)(c - 'a');
 }
 
-char Dictionary::IndexToChar(int index)
+char Dictionary::indexToChar(int index)
 {
 	return (char)(index) + 'a';
 }
 
-void Dictionary::removeNode(DictionaryNode* node)
+void Dictionary::removeWord(DictionaryNode* node)
 {
-	DictionaryNode* parent = node->mParent;
-	parent->mChildren[CharToIndex(node->mValue)] = nullptr;
-	parent->mChildrenCount = parent->mChildrenCount - 1;
+	node->mIsWord = false;
 
-	//If a node no longer has children, then we should remove that one too
-	if (parent->mChildrenCount == 0)
+	//If we are a leaf node, then remove ourselves and decrement our parent's counter
+	if (node->mChildrenCount == 0)
 	{
-		removeNode(parent);
+		DictionaryNode* parent = node->mParent;
+		//TODO: In a parallel implementation, this needs to be atomic
+		--(parent->mChildrenCount);
+		parent->mChildren[charToIndex(node->mValue)] = nullptr;
+		delete node;
+
+		//If a node no longer has children and isn't a word, then we should cascade remove that one too
+		if (parent->mChildrenCount == 0 && !parent->mIsWord)
+		{
+			removeWord(parent);
+		}
 	}
 }
