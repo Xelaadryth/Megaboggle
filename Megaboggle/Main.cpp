@@ -17,25 +17,24 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	printf("Loading dictionary...\n");
+	printf("Loading dictionary...");
+	Timer dictionaryTimer;
 	Dictionary dictionary(params.dictPath);
+	printf("%li milliseconds.\n", dictionaryTimer.stop());
 
-	printf("Loading board...\n");
-	// TODO: Load the board
-	std::cout << params.boardPath << "\n";
+	printf("Loading board...");
+	Timer boardTimer;
+	//TODO: Load the board
+	printf("%li milliseconds.\n", boardTimer.stop());
 
 	printf("\nLoading complete! Hit any key to start solving!\n");
 	_getch();
 
 	Timer solveTimer;
-
-	// TODO: Solve board
-	_getch();
-
-	long stopTime = solveTimer.stop();
+	//TODO: Solve board
 	printf("Solved in %li milliseconds.\n", solveTimer.stop());
-
 	_getch();
+
 	return 0;
 }
 
