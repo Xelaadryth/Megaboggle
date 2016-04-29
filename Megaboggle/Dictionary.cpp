@@ -8,7 +8,7 @@ DictionaryNode::DictionaryNode(DictionaryNode* parent, char value) :
 	mParent(parent),
 	mValue(value),
 	mChildrenCount(0),
-	mChildren() {}
+	mChildren{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} {}
 
 DictionaryNode::~DictionaryNode()
 {
@@ -44,7 +44,7 @@ Dictionary::~Dictionary()
 
 bool Dictionary::addWord(std::string wordString)
 {
-	int wordLength = wordString.length();
+	size_t wordLength = wordString.length();
 	const char* word = wordString.c_str();
 
 	// Filter out anything that isn't just letters
@@ -59,10 +59,7 @@ bool Dictionary::addWord(std::string wordString)
 	// Construct our structs one letter at a time
 	for (int i = 0; i < wordLength; ++i)
 	{
-		if (word[i] == 'a')
-		{
-			printf("%i ", (int)(word[i] - 'a'));
-		}
+		// TODO: STUFF
 	}
 
 	return true;

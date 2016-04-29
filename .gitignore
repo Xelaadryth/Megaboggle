@@ -1,6 +1,11 @@
 # Debug files
+Megaboggle/x64/Debug
 Megaboggle/Debug/
-Debug/*
+Debug/
+
+# Visual Studio
+.vs/
+*.vcxproj*
 
 # Random files
 Megaboggle.VC.VC.opendb
