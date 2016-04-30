@@ -21,7 +21,7 @@ CommandLineParameters::CommandLineParameters(int argc, char** argv)
                 mBoardPath = argv[++i];
                 break;
 			case 'o':
-				mBenchmark = false;
+				mOutfile = argv[++i];
 				break;
             }
         }

@@ -6,7 +6,7 @@ struct CommandLineParameters
 {
     std::string mDictPath = "";
     std::string mBoardPath = "";
-	bool mBenchmark = true;
+	std::string mOutfile = "";
 
     CommandLineParameters(int argc, char** argv);
 };

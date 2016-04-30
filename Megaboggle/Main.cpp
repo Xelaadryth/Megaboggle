@@ -25,46 +25,33 @@ int main(int argc, char** argv)
         return -1;
     }
 
-	if (params->mBenchmark)
-	{
-		printf("Loading dictionary...");
-		Timer dictionaryTimer;
-		Dictionary* dictionary = new Dictionary(params->mDictPath);
-		printf("%lld milliseconds.\n", dictionaryTimer.stop());
+	printf("Loading dictionary...");
+	Timer dictionaryTimer;
+	Dictionary* dictionary = new Dictionary(params->mDictPath);
+	printf("%lld milliseconds.\n", dictionaryTimer.stop());
 
-		printf("Loading board...");
-		Timer boardTimer;
-		Board* board = new Board(params->mBoardPath);
-		Solver solver(dictionary, board);
-		printf("%lld milliseconds.\n", boardTimer.stop());
+	printf("Loading board...");
+	Timer boardTimer;
+	Board* board = new Board(params->mBoardPath);
+	Solver solver(dictionary, board, params->mOutfile);
+	printf("%lld milliseconds.\n", boardTimer.stop());
 
-		printf("\nLoading complete! Hit any key to start solving!\n");
-		_getch();
+	printf("\nLoading complete! Hit any key to start solving!\n");
+	_getch();
 
-		Timer solveTimer;
-		solver.solve();
-		printf("\nSolved in %lld milliseconds.\n", solveTimer.stop());
+	Timer solveTimer;
+	solver.solve();
+	printf("\nSolved in %lld milliseconds.\n", solveTimer.stop());
 
-		//Cleanup!
-		delete params;
-		delete dictionary;
-		delete board;
+	//Cleanup!
+	delete params;
+	delete dictionary;
+	delete board;
 
-		//Print out memory leaks
-		_CrtDumpMemoryLeaks();
-		printf("\nPress any key to exit the program.\n");
-		_getch();
-	}
-	else
-	{
-		Dictionary* dictionary = new Dictionary(params->mDictPath);
-		Board* board = new Board(params->mBoardPath);
-		Solver solver(dictionary, board);
-		solver.solve();
-		delete params;
-		delete dictionary;
-		delete board;
-	}
+	//Print out memory leaks
+	_CrtDumpMemoryLeaks();
+	printf("\nPress any key to exit the program.\n");
+	_getch();
 
     return 0;
 }

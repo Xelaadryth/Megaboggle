@@ -22,7 +22,7 @@ struct DictionaryNode
 class Dictionary
 {
 public:
-    Dictionary(const std::string filePath);
+    Dictionary(const std::string filename);
     ~Dictionary();
 
     const DictionaryNode* getRoot();

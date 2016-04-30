@@ -1,5 +1,8 @@
 #include "Solver.h"
 
+//TODO: Better place for this
+FILE* mOutfile;
+
 Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::list<unsigned int>* visited, unsigned int threadNum) :
 	mDictionary(dictionary),
 	mDNode(dNode),
@@ -10,13 +13,16 @@ Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board
 {
 }
 
-Solver::Solver(Dictionary* dictionary, const Board* board) :
+Solver::Solver(Dictionary* dictionary, const Board* board, const std::string filename) :
     mDictionary(dictionary),
-    mBoard(board) {}
+    mBoard(board)
+{
+	fopen_s(&mOutfile, filename.c_str(), "w");
+}
 
 Solver::~Solver()
 {
-	//delete mAnswers;
+	fclose(mOutfile);
 }
 
 void Solver::solve()
@@ -55,12 +61,9 @@ void Solver::startSearch(Dictionary* dictionary, const Board* board, unsigned in
 				//Get the place on the board to start from
 				unsigned int bIndex = j * width + i;
 
-				visited->push_back(bIndex);
 				Search* search = new Search(dictionary, Dictionary::getChild(dictionary->getRoot(), board->mBoard[bIndex]), board, bIndex, visited, threadNum);
 				recursiveSearch(search);
 
-				//Clear the vector
-				visited->clear();
 				delete search;
 			}
 			++distributionIndex;
@@ -70,10 +73,10 @@ void Solver::startSearch(Dictionary* dictionary, const Board* board, unsigned in
 	delete visited;
 }
 
-void Solver::recursiveSearch(Search* search)
+void Solver::checkSearch(Search* search)
 {
 	//Found a word!
-	//TODO: Make this work in parallel
+	//TODO: Make this work in parallel with fprintf on a global file
 	if (search->mDNode->mIsWord)
 	{
 		char* word = new char[search->mDNode->mDepth + 1]();
@@ -84,58 +87,96 @@ void Solver::recursiveSearch(Search* search)
 			word[i] = search->mBoard->mBoard[*it];
 			++i;
 		}
-		printf("%s\n", word);
+		fprintf(mOutfile, "%s\n", word);
 
 		delete word;
 		//TODO: Make this allowable
 		//search->mDictionary->removeWord(search->mDNode);
 		search->mDNode->mIsWord = false;
 	}
+}
+
+void Solver::recursiveSearch(Search* search)
+{
+	unsigned int oldBIndex = search->mBIndex;
+	DictionaryNode* oldDNode = search->mDNode;
+
+	search->mVisited->push_back(oldBIndex);
+
+	//Check if we have a word yet
+	checkSearch(search);
 
 	//Look left
-	unsigned int x = search->mBIndex % search->mBoard->mWidth;
+	unsigned int x = oldBIndex % search->mBoard->mWidth;
 	if (x > 0) {
-		legalNext(search, search->mBIndex - 1);
+		search->mBIndex = oldBIndex - 1;
+
+		if (indexVisited(search->mBIndex, search->mVisited))
+		{
+			search->mDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[search->mBIndex]);
+			if (search->mDNode)
+			{
+				recursiveSearch(search);
+			}
+			search->mDNode = oldDNode;
+		}
 	}
 
 	//Look right
 	if (x < search->mBoard->mWidth - 1) {
-		legalNext(search, search->mBIndex + 1);
+		search->mBIndex = oldBIndex + 1;
+
+		if (indexVisited(search->mBIndex, search->mVisited))
+		{
+			search->mDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[search->mBIndex]);
+			if (search->mDNode)
+			{
+				recursiveSearch(search);
+			}
+			search->mDNode = oldDNode;
+		}
 	}
 
 	//Look up
 	unsigned int y = search->mBIndex / search->mBoard->mWidth;
 	if (y > 0) {
-		legalNext(search, search->mBIndex - search->mBoard->mWidth);
+		search->mBIndex = oldBIndex - search->mBoard->mWidth;
+		if (indexVisited(search->mBIndex, search->mVisited))
+		{
+			search->mDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[search->mBIndex]);
+			if (search->mDNode)
+			{
+				recursiveSearch(search);
+			}
+			search->mDNode = oldDNode;
+		}
 	}
 
 	//Look down
 	if (y < search->mBoard->mHeight - 1) {
-		legalNext(search, search->mBIndex + search->mBoard->mWidth);
+		search->mBIndex = oldBIndex + search->mBoard->mWidth;
+
+		if (indexVisited(search->mBIndex, search->mVisited))
+		{
+			search->mDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[search->mBIndex]);
+			if (search->mDNode)
+			{
+				recursiveSearch(search);
+			}
+			search->mDNode = oldDNode;
+			}
 	}
 
-
+	search->mBIndex = oldBIndex;
+	search->mVisited->pop_back();
 }
 
-void Solver::legalNext(Search* search, unsigned int potentialIndex)
+inline bool Solver::indexVisited(unsigned int bIndex, std::list<unsigned int>* visited)
 {
-	DictionaryNode* oldDNode = search->mDNode;
-	DictionaryNode* nextDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[potentialIndex]);
-
-	unsigned int oldBIndex = search->mBIndex;
-
-	if (nextDNode)
+	std::list<unsigned int>::iterator result = std::find(visited->begin(), visited->end(), bIndex);
+	if (result == visited->end())
 	{
-		std::list<unsigned int>::iterator iter = std::find(search->mVisited->begin(), search->mVisited->end(), potentialIndex);
-		if (iter == search->mVisited->end())
-		{
-			search->mVisited->push_back(potentialIndex);
-			search->mDNode = nextDNode;
-			search->mBIndex = potentialIndex;
-			recursiveSearch(search);
-			search->mBIndex = oldBIndex;
-			search->mVisited->pop_back();
-			search->mDNode = oldDNode;
-		}
+		return true;
 	}
+	return false;
 }
