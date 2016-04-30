@@ -6,7 +6,7 @@
 #include <string>
 #include <thread>
 
-const int NUM_THREADS = 16;
+const int NUM_THREADS = 8;
 
 struct Search
 {
