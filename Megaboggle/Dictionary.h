@@ -12,9 +12,9 @@ struct DictionaryNode
 
     DictionaryNode* mParent;
     const char mValue;
-	const unsigned int mDepth;
-    bool mIsWord;
-    std::atomic_flag mIsDisabled;
+    const unsigned int mDepth;
+    std::atomic_bool mIsWord;
+    std::atomic_bool mIsDisabled;
     std::atomic<int> mChildrenCount;
     DictionaryNode* mChildren[LETTER_COUNT];
 };

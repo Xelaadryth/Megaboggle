@@ -10,12 +10,12 @@
 DictionaryNode::DictionaryNode(DictionaryNode* parent, char value, unsigned int depth) :
     mParent(parent),
     mValue(value),
-	mDepth(depth),
+    mDepth(depth),
     mIsWord(false),
+    mIsDisabled(false),
     mChildrenCount(0),
     mChildren()
 {
-    mIsDisabled.clear();
 }
 
 DictionaryNode::~DictionaryNode()
@@ -98,13 +98,12 @@ char Dictionary::indexToChar(int index)
 //and adding them to a list of "delete later"
 void Dictionary::removeWord(DictionaryNode* node)
 {
-    node->mIsWord = false;
-
     //If we are a leaf node, then remove ourselves and decrement our parent's counter
-    if (node->mChildrenCount == 0)
+    if (node->mChildrenCount.load() == 0)
     {
-        //If we are disabled by another thread, do nothing. Otherwise, disable ourselves!
-        if (!node->mIsDisabled.test_and_set(std::memory_order_relaxed))
+        //If we are already disabled by another thread, do nothing. Otherwise, disable ourselves!
+        bool expected = false;
+        if (!node->mIsDisabled.compare_exchange_strong(expected, true))
         {
             DictionaryNode* parent = node->mParent;
             int letterIndex = charToIndex(node->mValue);

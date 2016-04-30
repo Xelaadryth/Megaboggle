@@ -20,9 +20,9 @@ CommandLineParameters::CommandLineParameters(int argc, char** argv)
             case 'i':
                 mBoardPath = argv[++i];
                 break;
-			case 'o':
-				mOutfile = argv[++i];
-				break;
+            case 'o':
+                mOutfile = argv[++i];
+                break;
             }
         }
     }
