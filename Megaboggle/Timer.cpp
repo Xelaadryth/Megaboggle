@@ -1,5 +1,5 @@
-#include "Timer.h"
 #include <chrono>
+#include "Timer.h"
 
 Timer::Timer()
 {

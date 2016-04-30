@@ -11,60 +11,45 @@ Board::Board(const std::string filename)
     std::ifstream boardFile(filename);
     if (boardFile.is_open())
     {
-        //Make a list of lists, which we'll then convert into an array of BoardNodes
-        std::vector<std::vector<char>> letterRows;
-        while (std::getline(boardFile, line))
+        //Get a 1D list of all the letters in the board and store the height/width
+        std::vector<char> charList;
+
+		unsigned int j;
+        for (j = 0; std::getline(boardFile, line); ++j)
         {
-            //Make a list of letters
-            std::vector<char> letterRow;
-            for (unsigned int i = 0; i < line.length(); i++)
+			unsigned int lineLength = line.length();
+
+            for (unsigned int lineIndex = 0; lineIndex < lineLength; lineIndex++)
             {
-                if (i % 2 == 0)
+                //Comma-separated means every other character is a comma, newline char not included since we called getline
+                if (lineIndex % 2 == 0)
                 {
-                    letterRow.push_back(line.at(i));
+                    charList.push_back(line.at(lineIndex));
                 }
             }
 
-            // The final row of the file may or may not be a blank line
-            if (letterRow.size() > 0)
+            //Record the number of columns after the first row
+            if (j == 0)
             {
-                //Add this row to our list of rows
-                letterRows.push_back(letterRow);
+                mWidth = charList.size();
             }
         }
 
-        //Assume that the file is at least a 1x1 grid
-        mNumRows = letterRows.size();
-        mNumColumns = letterRows[0].size();
+		if (j > 0)
+		{
+			mHeight = j;
+		}
+		else
+		{
+			printf("Invalid board.\n");
+		}
 
-        mBoard = new BoardNode*[mNumRows];
+		mBoard = new char[mHeight * mWidth]();
 
-        //Construct the m x n grid of BoardNodes
-        for (unsigned int j = 0; j < mNumRows; ++j)
-        {
-            //Initialize an empty "row" in our board, where a "row" is an array of BoardNodes
-            mBoard[j] = new BoardNode[mNumColumns];
-
-            //Fill in our row
-            for (unsigned int i = 0; i < mNumColumns; ++i)
-            {
-                mBoard[j][i].mValue = letterRows[j][i];
-
-                //Add our left neighbor if they exist
-                if (i > 0)
-                {
-                    mBoard[j][i].mLeft = &(mBoard[j][i - 1]);
-                    mBoard[j][i - 1].mRight = &(mBoard[j][i]);
-                }
-
-                //Add our up neighbor if they exist
-                if (j > 0)
-                {
-                    mBoard[j][i].mUp = &(mBoard[j - 1][i]);
-                    mBoard[j - 1][i].mDown = &(mBoard[j][i]);
-                }
-            }
-        }
+		for (unsigned int i = 0; i < charList.size(); ++i)
+		{
+			mBoard[i] = charList[i];
+		}
     }
     else
     {
@@ -74,18 +59,5 @@ Board::Board(const std::string filename)
 
 Board::~Board()
 {
-    for (unsigned int j = 0; j < mNumRows; ++j)
-    {
-        delete mBoard[j];
-    }
-
-    delete mBoard;
-}
-
-void Board::solve()
-{
-}
-
-void Board::writeAnswers()
-{
+	delete mBoard;
 }

@@ -7,9 +7,10 @@
 
 #define MIN_WORD_LENGTH 3
 
-DictionaryNode::DictionaryNode(DictionaryNode* parent, char value) :
+DictionaryNode::DictionaryNode(DictionaryNode* parent, char value, unsigned int depth) :
     mParent(parent),
     mValue(value),
+	mDepth(depth),
     mIsWord(false),
     mChildrenCount(0),
     mChildren()
@@ -64,7 +65,7 @@ bool Dictionary::addWord(std::string wordString)
         //Create the next node if it doesn't already exist
         if (!curNode->mChildren[letterIndex])
         {
-            curNode->mChildren[letterIndex] = new DictionaryNode(curNode, word[i]);
+            curNode->mChildren[letterIndex] = new DictionaryNode(curNode, word[i], curNode->mDepth + 1);
             ++(curNode->mChildrenCount);
         }
         curNode = curNode->mChildren[letterIndex];
@@ -91,6 +92,10 @@ char Dictionary::indexToChar(int index)
     return (char)(index) + 'a';
 }
 
+//TODO: Remove the atomic stuff from Dictionary and move it into the solver
+//TODO: Fix null pointer dereferences from deleting dictionary entries out from under the user.
+//One way is to still null the pointers in the arrays, but instead of deleting just marking as disabled
+//and adding them to a list of "delete later"
 void Dictionary::removeWord(DictionaryNode* node)
 {
     node->mIsWord = false;
@@ -120,7 +125,7 @@ void Dictionary::removeWord(DictionaryNode* node)
 
 Dictionary::Dictionary(const std::string filename)
 {
-    mRoot = new DictionaryNode(nullptr, '0');
+    mRoot = new DictionaryNode(nullptr, '0', 0);
 
     //Add all the words!
     std::string line;

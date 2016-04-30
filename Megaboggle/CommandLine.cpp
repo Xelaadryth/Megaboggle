@@ -4,7 +4,7 @@ CommandLineParameters::CommandLineParameters(int argc, char** argv)
 {
     for (int i = 1; i < argc; ++i)
     {
-        if (strlen(argv[i]) < 2 || argc - i < 2)
+        if (strlen(argv[i]) < 2 || argc - i < 1)
         {
             continue;
         }
@@ -15,20 +15,23 @@ CommandLineParameters::CommandLineParameters(int argc, char** argv)
             switch (argv[i][1])
             {
             case 'd':
-                dictPath = argv[++i];
+                mDictPath = argv[++i];
                 break;
             case 'i':
-                boardPath = argv[++i];
+                mBoardPath = argv[++i];
                 break;
+			case 'o':
+				mBenchmark = false;
+				break;
             }
         }
     }
 
-    if (dictPath == "")
+    if (mDictPath == "")
     {
         printf("Please input -d [DICTIONARY PATH].\n");
     }
-    if (boardPath == "")
+    if (mBoardPath == "")
     {
         printf("Please input -i [BOARD PATH].\n");
     }

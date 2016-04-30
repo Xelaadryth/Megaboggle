@@ -4,8 +4,9 @@
 
 struct CommandLineParameters
 {
-    std::string dictPath = "";
-    std::string boardPath = "";
+    std::string mDictPath = "";
+    std::string mBoardPath = "";
+	bool mBenchmark = true;
 
     CommandLineParameters(int argc, char** argv);
 };
