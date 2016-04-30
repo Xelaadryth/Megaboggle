@@ -1,7 +1,13 @@
+//Memory leak detection, comment out this and _CrtDumpMemoryLeaks when ready for production
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 #include <conio.h>
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "Board.h"
 #include "CommandLine.h"
 #include "Dictionary.h"
 #include "Timer.h"
@@ -9,9 +15,8 @@
 
 int main(int argc, char** argv)
 {
-
-    CommandLineParameters params = CommandLineParameters(argc, argv);
-    if (params.dictPath == "" || params.boardPath == "") {
+    CommandLineParameters* params = new CommandLineParameters(argc, argv);
+    if ((*params).dictPath == "" || (*params).boardPath == "") {
         printf("Failed to load dictionary and/or board.\n");
         _getch();
         return -1;
@@ -19,77 +24,30 @@ int main(int argc, char** argv)
 
     printf("Loading dictionary...");
     Timer dictionaryTimer;
-    Dictionary dictionary(params.dictPath);
-    printf("%li milliseconds.\n", dictionaryTimer.stop());
+    Dictionary* dictionary = new Dictionary(params->dictPath);
+    printf("%lld milliseconds.\n", dictionaryTimer.stop());
 
     printf("Loading board...");
     Timer boardTimer;
-    //TODO: Load the board
-    printf("%li milliseconds.\n", boardTimer.stop());
+    Board* board = new Board(params->boardPath);
+    printf("%lld milliseconds.\n", boardTimer.stop());
 
     printf("\nLoading complete! Hit any key to start solving!\n");
     _getch();
 
     Timer solveTimer;
-    //TODO: Solve board-----------------
-    const DictionaryNode* root = dictionary.getRoot();
-    DictionaryNode* node;
-    printf("%d ", root->mChildrenCount); //26
-    node = dictionary.getChild(root, 'a');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d ", node->mChildrenCount);
-    node = dictionary.getChild(node, 'v');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d ", node->mChildrenCount);
-    node = dictionary.getChild(node, 'i');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d ", node->mChildrenCount);
-    node = dictionary.getChild(node, 'd');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d ", node->mChildrenCount); //2
-    node = dictionary.getChild(node, 'i');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d ", node->mChildrenCount);
-    node = dictionary.getChild(node, 'n');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d \n", node->mChildrenCount);
+    board->solve();
+    printf("\nSolved in %lld milliseconds.\n", solveTimer.stop());
 
-    dictionary.removeWord(node);
+    //Cleanup!
+    delete params;
+    delete dictionary;
+    delete board;
 
-    printf("%d ", root->mChildrenCount);
-    node = dictionary.getChild(root, 'a');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d ", node->mChildrenCount);
-    node = dictionary.getChild(node, 'v');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d ", node->mChildrenCount);
-    node = dictionary.getChild(node, 'i');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d ", node->mChildrenCount);
-    node = dictionary.getChild(node, 'd');
-    if (node->mIsWord)
-        printf("MAWR");
-    printf("%d ", node->mChildrenCount); //1
-    node = dictionary.getChild(node, 'i');
-    if (!node)
-        printf("END");
-    //----------------------------------
-    printf("Solved in %li milliseconds.\n", solveTimer.stop());
-
-    //delete &dictionary;
-    // Delete the board
+    //Print out memory leaks
+    _CrtDumpMemoryLeaks();
+    printf("\nPress any key to exit the program.\n");
     _getch();
-
-
 
     return 0;
 }

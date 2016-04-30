@@ -19,7 +19,7 @@ DictionaryNode::DictionaryNode(DictionaryNode* parent, char value) :
 
 DictionaryNode::~DictionaryNode()
 {
-    for (int i = 0; i < LETTER_COUNT; ++i)
+    for (unsigned int i = 0; i < LETTER_COUNT; ++i)
     {
         if (mChildren[i])
         {
@@ -64,7 +64,7 @@ bool Dictionary::addWord(std::string wordString)
         //Create the next node if it doesn't already exist
         if (!curNode->mChildren[letterIndex])
         {
-            curNode->mChildren[charToIndex(word[i])] = new DictionaryNode(curNode, word[i]);
+            curNode->mChildren[letterIndex] = new DictionaryNode(curNode, word[i]);
             ++(curNode->mChildrenCount);
         }
         curNode = curNode->mChildren[letterIndex];
@@ -131,6 +131,10 @@ Dictionary::Dictionary(const std::string filename)
         {
             addWord(line);
         }
+    }
+    else
+    {
+        printf("\n\nFailed to open dictionary file: %s\n", filename.c_str());
     }
 }
 
