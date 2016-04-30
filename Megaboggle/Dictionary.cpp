@@ -99,22 +99,23 @@ char Dictionary::indexToChar(int index)
 void Dictionary::removeWord(DictionaryNode* node)
 {
     //If we are a leaf node, then remove ourselves and decrement our parent's counter
-    if (node->mChildrenCount.load() == 0)
+    if (node->mChildrenCount == 0)
     {
-        //If we are already disabled by another thread, do nothing. Otherwise, disable ourselves!
+        //If a parent that is a word has 1 child that we are removing at the same time as another thread removes the
+        //parent, then we have problems
         bool expected = false;
-        if (!node->mIsDisabled.compare_exchange_strong(expected, true))
+        if (node->mIsDisabled.compare_exchange_strong(expected, true))
         {
-            DictionaryNode* parent = node->mParent;
-            int letterIndex = charToIndex(node->mValue);
+            //The node is effectively disabled
+            node->mIsDisabled = true;
 
-            // Delete the node
-            parent->mChildren[letterIndex] = nullptr;
-            --(parent->mChildrenCount);
-            delete node;
+            DictionaryNode* parent = node->mParent;
+
+            //Only one thread can possibly reduce the parent's childrenCount to 0
+            unsigned int remainingChildren = parent->mChildrenCount.fetch_sub(1);
 
             //If a node no longer has children and isn't a word, then we should cascade remove that one too
-            if (parent->mChildrenCount == 0 && !parent->mIsWord)
+            if (remainingChildren == 0 && !parent->mIsWord)
             {
                 removeWord(parent);
             }

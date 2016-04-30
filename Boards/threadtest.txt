@@ -1,5 +1,8 @@
-a,b,a,b,a,b,a,b,a,b,a
-b,a,b,a,b,a,b,a,b,a,b
-a,b,a,b,a,b,a,b,a,b,a
-b,a,b,a,b,a,b,a,b,a,b
-a,b,a,b,a,b,a,b,a,b,a
+a,b,a,c,a,s
+s,a,c,a,b,a
+a,b,a,c,a,s
+a,b,a,c,a,s
+s,a,c,a,b,a
+s,a,c,a,b,a
+a,b,a,c,a,s
+s,a,c,a,b,a
