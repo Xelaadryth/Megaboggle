@@ -101,8 +101,7 @@ void Dictionary::removeWord(DictionaryNode* node)
     //If we are a leaf node, then remove ourselves and decrement our parent's counter
     if (node->mChildrenCount == 0)
     {
-        //If a parent that is a word has 1 child that we are removing at the same time as another thread removes the
-        //parent, then we have problems
+        //Multiple people can try to remove this node at the same time, but only one will succeed
         bool expected = false;
         if (node->mIsDisabled.compare_exchange_strong(expected, true))
         {
@@ -110,12 +109,10 @@ void Dictionary::removeWord(DictionaryNode* node)
             node->mIsDisabled = true;
 
             DictionaryNode* parent = node->mParent;
+            --parent->mChildrenCount;
 
-            //Only one thread can possibly reduce the parent's childrenCount to 0
-            unsigned int remainingChildren = parent->mChildrenCount.fetch_sub(1);
-
-            //If a node no longer has children and isn't a word, then we should cascade remove that one too
-            if (remainingChildren == 0 && !parent->mIsWord)
+            //If a node no longer has children and isn't a word, then we can try to cascade remove that one too
+            if (!parent->mIsWord)
             {
                 removeWord(parent);
             }

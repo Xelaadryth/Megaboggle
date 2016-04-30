@@ -80,8 +80,6 @@ void Solver::checkSearch(Search* search)
     bool expected = true;
     if (search->mDNode->mIsWord.compare_exchange_strong(expected, false))
     {
-        //Remove the word from the dictionary
-        search->mDictionary->removeWord(search->mDNode);
 
         //Aggregate and print the word
         char* word = new char[search->mDNode->mDepth + 1]();
@@ -95,6 +93,9 @@ void Solver::checkSearch(Search* search)
         fprintf(mOutfile, "%s\n", word);
 
         delete word;
+
+        //Remove the word from the dictionary
+        search->mDictionary->removeWord(search->mDNode);
     }
 }
 
