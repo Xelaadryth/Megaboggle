@@ -109,9 +109,15 @@ void Solver::recursiveSearch(Search* search)
     //Check if we have a word yet
     checkSearch(search);
 
-    //Look left
     unsigned int x = oldBIndex % search->mBoard->mWidth;
-    if (x > 0) {
+    unsigned int y = search->mBIndex / search->mBoard->mWidth;
+    bool hasLeft = x > 0;
+    bool hasRight = x < search->mBoard->mWidth - 1;
+    bool hasUp = y > 0;
+    bool hasDown = y < search->mBoard->mHeight - 1;
+
+    //Look left
+    if (hasLeft) {
         search->mBIndex = oldBIndex - 1;
 
         if (indexVisited(search->mBIndex, search->mVisited))
@@ -123,10 +129,40 @@ void Solver::recursiveSearch(Search* search)
             }
             search->mDNode = oldDNode;
         }
+
+        //Look up-left
+        if (hasUp) {
+            search->mBIndex = oldBIndex - 1 - search->mBoard->mWidth;
+
+            if (indexVisited(search->mBIndex, search->mVisited))
+            {
+                search->mDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[search->mBIndex]);
+                if (search->mDNode && !search->mDNode->mIsDisabled)
+                {
+                    recursiveSearch(search);
+                }
+                search->mDNode = oldDNode;
+            }
+        }
+
+        //Look down-left
+        if (hasDown) {
+            search->mBIndex = oldBIndex - 1 + search->mBoard->mWidth;
+
+            if (indexVisited(search->mBIndex, search->mVisited))
+            {
+                search->mDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[search->mBIndex]);
+                if (search->mDNode && !search->mDNode->mIsDisabled)
+                {
+                    recursiveSearch(search);
+                }
+                search->mDNode = oldDNode;
+            }
+        }
     }
 
     //Look right
-    if (x < search->mBoard->mWidth - 1) {
+    if (hasRight) {
         search->mBIndex = oldBIndex + 1;
 
         if (indexVisited(search->mBIndex, search->mVisited))
@@ -138,11 +174,40 @@ void Solver::recursiveSearch(Search* search)
             }
             search->mDNode = oldDNode;
         }
+
+        //Look up-right
+        if (hasUp) {
+            search->mBIndex = oldBIndex + 1 - search->mBoard->mWidth;
+
+            if (indexVisited(search->mBIndex, search->mVisited))
+            {
+                search->mDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[search->mBIndex]);
+                if (search->mDNode && !search->mDNode->mIsDisabled)
+                {
+                    recursiveSearch(search);
+                }
+                search->mDNode = oldDNode;
+            }
+        }
+
+        //Look down-right
+        if (hasDown) {
+            search->mBIndex = oldBIndex + 1 + search->mBoard->mWidth;
+
+            if (indexVisited(search->mBIndex, search->mVisited))
+            {
+                search->mDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[search->mBIndex]);
+                if (search->mDNode && !search->mDNode->mIsDisabled)
+                {
+                    recursiveSearch(search);
+                }
+                search->mDNode = oldDNode;
+            }
+        }
     }
 
     //Look up
-    unsigned int y = search->mBIndex / search->mBoard->mWidth;
-    if (y > 0) {
+    if (hasUp) {
         search->mBIndex = oldBIndex - search->mBoard->mWidth;
         if (indexVisited(search->mBIndex, search->mVisited))
         {
@@ -156,7 +221,7 @@ void Solver::recursiveSearch(Search* search)
     }
 
     //Look down
-    if (y < search->mBoard->mHeight - 1) {
+    if (hasDown) {
         search->mBIndex = oldBIndex + search->mBoard->mWidth;
 
         if (indexVisited(search->mBIndex, search->mVisited))
@@ -168,6 +233,20 @@ void Solver::recursiveSearch(Search* search)
             }
             search->mDNode = oldDNode;
             }
+    }
+
+    if (hasLeft && hasUp) {
+        search->mBIndex = oldBIndex - 1 - search->mBoard->mWidth;
+
+        if (indexVisited(search->mBIndex, search->mVisited))
+        {
+            search->mDNode = search->mDictionary->getChild(search->mDNode, search->mBoard->mBoard[search->mBIndex]);
+            if (search->mDNode && !search->mDNode->mIsDisabled)
+            {
+                recursiveSearch(search);
+            }
+            search->mDNode = oldDNode;
+        }
     }
 
     search->mBIndex = oldBIndex;
