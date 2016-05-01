@@ -8,13 +8,13 @@ void(*SolverThreadPool::mFnc)(Search *);
 //decrement at the same time and it overflows to max int
 std::atomic<int> SolverThreadPool::mNumWorkItems;
 
-Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::vector<unsigned int>* visited) :
+Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex) :
     mDictionary(dictionary),
     mDNode(dNode),
     mBoard(board),
-    mBIndex(bIndex),
-    mVisited(visited)
+    mBIndex(bIndex)
 {
+    mVisited = new std::vector<unsigned int>();
 }
 
 Search::~Search()
@@ -48,14 +48,14 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
 {
     DictionaryNode* root = dictionary->getRoot();
     //Re-use this vector so we only have to allocate once
-    std::vector<unsigned int>* visited = new std::vector<unsigned int>();
-    Search* search = new Search(dictionary, root, board, 0, visited);
+    Search* search = new Search(dictionary, root, board, 0);
 
     //We exit when the work queue is empty
     while (true)
     {
         //Pull a row to process from the work queue
         int row = --SolverThreadPool::mNumWorkItems;
+        //We decrement first so we get execute on every element from [0, mNumWorkItems - 1]
         if (row < 0) {
             delete search;
             return;
@@ -75,7 +75,7 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
         }
         else
         {
-            //Set up and run the search
+            //Set up and run the search for an individual element
             search->mDNode = root;
             search->mBIndex = row;
             SolverThreadPool::mFnc(search);
@@ -89,6 +89,7 @@ Solver::Solver(Dictionary* dictionary, const Board* board, const std::string fil
     mDictionary(dictionary),
     mBoard(board)
 {
+    //Chop up work to put in the work queue
     if (BY_ROW) {
         mThreadPool = new SolverThreadPool(Solver::recursiveSearch, board->mHeight);
     }
@@ -211,10 +212,12 @@ void Solver::checkSearch(Search* search)
         char* word = new char[length + 1];
         for (unsigned int i = 0; i < length; ++i)
         {
+            //Look up each character from the board
             word[i] = search->mBoard->mBoard[(*search->mVisited)[i]];
         }
         word[length] = '\0';
 
+        //Print each word to file. fprintf is thread-safe and won't garble itself
         fprintf(Solver::solverOutfile, "%s\n", word);
 
         delete word;

@@ -18,8 +18,8 @@
 int main(int argc, char** argv)
 {
     CommandLineParameters* params = new CommandLineParameters(argc, argv);
-    if (params->mDictPath == "" || params->mBoardPath == "") {
-        printf("Failed to load dictionary and/or board.\n");
+    if (params->mDictPath == "" || params->mBoardPath == "" || params->mOutfile == "") {
+        printf("Additional options in top of Solver.h\n");
         _getch();
         return -1;
     }

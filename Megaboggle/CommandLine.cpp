@@ -35,4 +35,8 @@ CommandLineParameters::CommandLineParameters(int argc, char** argv)
     {
         printf("Please input -i [BOARD PATH].\n");
     }
+    if (mOutfile == "")
+    {
+        printf("Please input -o [OUT PATH].\n");
+    }
 }
