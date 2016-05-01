@@ -27,7 +27,7 @@ public:
 
     DictionaryNode* getRoot();
     bool addWord(std::string word);
-    void removeWord(DictionaryNode* node);
+    static void removeWord(DictionaryNode* node);
     static DictionaryNode* getChild(const DictionaryNode* parent, const char value);
 
 private:

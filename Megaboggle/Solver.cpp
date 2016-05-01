@@ -120,7 +120,7 @@ void Solver::recursiveSearch(Search* search)
     }
 
     DictionaryNode* oldDNode = search->mDNode;
-    search->mDNode = search->mDictionary->getChild(oldDNode, search->mBoard->mBoard[oldBIndex]);
+    search->mDNode = Dictionary::getChild(oldDNode, search->mBoard->mBoard[oldBIndex]);
     //No dictionary entries remain along this path; either never existed or was disabled
     if (!search->mDNode || search->mDNode->mIsDisabled)
     {
@@ -201,7 +201,7 @@ void Solver::checkSearch(Search* search)
     if (search->mDNode->mIsWord.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed))
     {
         //Found a word! Remove it from the dictionary
-        search->mDictionary->removeWord(search->mDNode);
+        Dictionary::removeWord(search->mDNode);
 
         //Aggregate and print it
         unsigned int length = search->mVisited->size();
