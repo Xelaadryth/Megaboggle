@@ -1,12 +1,16 @@
-# Debug files
+# Debug/Release files
 output.txt
-Megaboggle/x64/Debug
-Megaboggle/Debug/
 Debug/
+Release/
+Megaboggle/Debug/
+Megaboggle/Release/
+Megaboggle/x64/Debug
 
 # Visual Studio
 .vs/
 *.vcxproj*
+*.vsp
+*.psess
 *.gitattributes
 *.sdf
 *.opensdf

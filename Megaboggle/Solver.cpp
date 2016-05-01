@@ -77,7 +77,7 @@ void Solver::checkSearch(Search* search)
 {
     //Only one thread is allowed to remove any given word
     bool expected = true;
-    if (search->mDNode->mIsWord.compare_exchange_strong(expected, false))
+    if (search->mDNode->mIsWord.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed))
     {
         //Found a word! Remove it from the dictionary
         search->mDictionary->removeWord(search->mDNode);

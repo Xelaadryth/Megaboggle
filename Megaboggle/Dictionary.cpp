@@ -99,7 +99,7 @@ void Dictionary::removeWord(DictionaryNode* node)
     {
         //Multiple people can try to remove this node at the same time, but only one will succeed
         bool expected = false;
-        if (node->mIsDisabled.compare_exchange_strong(expected, true))
+        if (node->mIsDisabled.compare_exchange_strong(expected, true, std::memory_order_relaxed, std::memory_order_relaxed))
         {
             //The node is effectively disabled
             node->mIsDisabled = true;
