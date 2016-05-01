@@ -9,7 +9,9 @@
 #include "Board.h"
 #include "Dictionary.h"
 
+//Customize here depending on number of processors and board size/density
 const int NUM_THREADS = 4;
+const bool BY_ROW = false;
 
 struct Search
 {
@@ -61,6 +63,7 @@ private:
     //Checks if an index is in the visited index list
     static inline bool indexVisited(unsigned int bIndex, std::list<unsigned int>* visited);
 
+    SolverThreadPool* mThreadPool;
     Dictionary* mDictionary;
     const Board* mBoard;
     static FILE* solverOutfile;

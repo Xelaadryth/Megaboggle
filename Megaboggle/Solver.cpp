@@ -4,7 +4,8 @@
 FILE* Solver::solverOutfile;
 std::thread SolverThreadPool::mThreads[NUM_THREADS];
 void(*SolverThreadPool::mFnc)(Search *);
-//Theoretically there's a race condition where if more than MIN_INT threads decrement this at the same time, it overflows to max int
+//Theoretically there's a race condition where more than MIN_INT threads
+//decrement at the same time and it overflows to max int
 std::atomic<int> SolverThreadPool::mNumWorkItems;
 
 Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::list<unsigned int>* visited) :
@@ -48,17 +49,33 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
     //We exit when the work queue is empty
     while (true)
     {
-        //Pull from the work queue
-        int bIndex = --SolverThreadPool::mNumWorkItems;
-        if (bIndex < 0) {
+        //Pull a row to process from the work queue
+        int row = --SolverThreadPool::mNumWorkItems;
+        if (row < 0) {
             delete search;
             delete visited;
             return;
         }
-        //Set up and run the search
-        search->mDNode = root;
-        search->mBIndex = bIndex;
-        SolverThreadPool::mFnc(search);
+
+        if (BY_ROW) {
+            //Solve for every element in that row
+            for (unsigned int i = 0; i < board->mWidth; ++i)
+            {
+                unsigned int bIndex = row * board->mWidth + i;
+
+                //Set up and run the search
+                search->mDNode = root;
+                search->mBIndex = bIndex;
+                SolverThreadPool::mFnc(search);
+            }
+        }
+        else
+        {
+            //Set up and run the search
+            search->mDNode = root;
+            search->mBIndex = row;
+            SolverThreadPool::mFnc(search);
+        }
     }
 
     delete search;
@@ -69,21 +86,27 @@ Solver::Solver(Dictionary* dictionary, const Board* board, const std::string fil
     mDictionary(dictionary),
     mBoard(board)
 {
+    if (BY_ROW) {
+        mThreadPool = new SolverThreadPool(Solver::recursiveSearch, board->mHeight);
+    }
+    else
+    {
+        mThreadPool = new SolverThreadPool(Solver::recursiveSearch, board->mWidth * board->mHeight);
+    }
     fopen_s(&(Solver::solverOutfile), filename.c_str(), "w");
 }
 
 Solver::~Solver()
 {
     fclose(Solver::solverOutfile);
+    delete mThreadPool;
 }
 
 void Solver::solve()
 {
     //Start the thread pool on the work queue
-    SolverThreadPool threadPool(Solver::recursiveSearch, mBoard->mWidth * mBoard->mHeight);
-    threadPool.start(mDictionary, mBoard);
-
-    threadPool.join();
+    mThreadPool->start(mDictionary, mBoard);
+    mThreadPool->join();
 }
 
 void Solver::recursiveSearch(Search* search)
