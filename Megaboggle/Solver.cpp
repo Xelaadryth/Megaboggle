@@ -17,6 +17,11 @@ Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board
 {
 }
 
+Search::~Search()
+{
+    delete mVisited;
+}
+
 SolverThreadPool::SolverThreadPool(void(*fnc)(Search *), int numWorkItems)
 {
     SolverThreadPool::mFnc = fnc;
@@ -53,7 +58,6 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
         int row = --SolverThreadPool::mNumWorkItems;
         if (row < 0) {
             delete search;
-            delete visited;
             return;
         }
 
@@ -79,7 +83,6 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
     }
 
     delete search;
-    delete visited;
 }
 
 Solver::Solver(Dictionary* dictionary, const Board* board, const std::string filename) :
@@ -120,7 +123,7 @@ void Solver::recursiveSearch(Search* search)
     }
 
     DictionaryNode* oldDNode = search->mDNode;
-    search->mDNode = Dictionary::getChild(oldDNode, search->mBoard->mBoard[oldBIndex]);
+    search->mDNode = oldDNode->mChildren[Dictionary::charToIndex(search->mBoard->mBoard[oldBIndex])];
     //No dictionary entries remain along this path; either never existed or was disabled
     if (!search->mDNode || search->mDNode->mIsDisabled)
     {

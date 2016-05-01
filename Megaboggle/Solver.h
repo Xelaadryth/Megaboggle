@@ -16,6 +16,7 @@ const bool BY_ROW = false;
 struct Search
 {
     Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::vector<unsigned int>* visited);
+    ~Search();
 
     Dictionary* mDictionary;
     DictionaryNode* mDNode;

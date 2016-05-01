@@ -77,19 +77,9 @@ bool Dictionary::addWord(std::string wordString)
     return true;
 }
 
-DictionaryNode* Dictionary::getChild(const DictionaryNode* parent, const char value)
-{
-    return parent->mChildren[charToIndex(value)];
-}
-
 int Dictionary::charToIndex(char c)
 {
     return (int)(c - 'a');
-}
-
-char Dictionary::indexToChar(int index)
-{
-    return (char)(index) + 'a';
 }
 
 void Dictionary::removeWord(DictionaryNode* node)

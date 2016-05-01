@@ -28,11 +28,8 @@ public:
     DictionaryNode* getRoot();
     bool addWord(std::string word);
     static void removeWord(DictionaryNode* node);
-    static DictionaryNode* getChild(const DictionaryNode* parent, const char value);
+    static int charToIndex(char c);
 
 private:
     DictionaryNode* mRoot;
-
-    static int charToIndex(char c);
-    static char indexToChar(int index);
 };
