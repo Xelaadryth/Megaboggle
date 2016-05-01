@@ -8,7 +8,7 @@ void(*SolverThreadPool::mFnc)(Search *);
 //decrement at the same time and it overflows to max int
 std::atomic<int> SolverThreadPool::mNumWorkItems;
 
-Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::list<unsigned int>* visited) :
+Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::vector<unsigned int>* visited) :
     mDictionary(dictionary),
     mDNode(dNode),
     mBoard(board),
@@ -43,7 +43,7 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
 {
     DictionaryNode* root = dictionary->getRoot();
     //Re-use this vector so we only have to allocate once
-    std::list<unsigned int>* visited = new std::list<unsigned int>();
+    std::vector<unsigned int>* visited = new std::vector<unsigned int>();
     Search* search = new Search(dictionary, root, board, 0, visited);
 
     //We exit when the work queue is empty
@@ -204,26 +204,28 @@ void Solver::checkSearch(Search* search)
         search->mDictionary->removeWord(search->mDNode);
 
         //Aggregate and print it
-        char* word = new char[search->mDNode->mDepth + 1]();
-
-        unsigned int i = 0;
-        for (std::list<unsigned int>::iterator it = search->mVisited->begin(); it != search->mVisited->end(); ++it)
+        unsigned int length = search->mVisited->size();
+        char* word = new char[length + 1];
+        for (unsigned int i = 0; i < length; ++i)
         {
-            word[i] = search->mBoard->mBoard[*it];
-            ++i;
+            word[i] = search->mBoard->mBoard[(*search->mVisited)[i]];
         }
+        word[length] = '\0';
+
         fprintf(Solver::solverOutfile, "%s\n", word);
 
         delete word;
     }
 }
 
-inline bool Solver::indexVisited(unsigned int bIndex, std::list<unsigned int>* visited)
+inline bool Solver::indexVisited(unsigned int bIndex, std::vector<unsigned int>* visited)
 {
-    std::list<unsigned int>::iterator result = std::find(visited->begin(), visited->end(), bIndex);
-    if (result == visited->end())
+    for (unsigned int i = 0; i < visited->size(); ++i)
     {
-        return false;
+        if (bIndex == (*visited)[i])
+        {
+            return true;
+        }
     }
-    return true;
+    return false;
 }

@@ -1,27 +1,27 @@
 #pragma once
 
 #include <atomic>
-#include <forward_list>
-#include <list>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "Board.h"
 #include "Dictionary.h"
 
-//Customize here depending on number of processors and board size/density
+//Customize to match number of processors
 const int NUM_THREADS = 4;
+//Changes granularity of workQueue items, use for larger and sparser boards
 const bool BY_ROW = false;
 
 struct Search
 {
-    Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::list<unsigned int>* visited);
+    Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::vector<unsigned int>* visited);
 
     Dictionary* mDictionary;
     DictionaryNode* mDNode;
     const Board* mBoard;
     unsigned int mBIndex;
-    std::list<unsigned int>* mVisited;
+    std::vector<unsigned int>* mVisited;
 };
 
 //TODO: Make this a template class once we figure out how std::thread uses va_list or whatever
@@ -61,7 +61,7 @@ private:
     //Depth-first search the calls checkSearch at every step
     static void recursiveSearch(Search* search);
     //Checks if an index is in the visited index list
-    static inline bool indexVisited(unsigned int bIndex, std::list<unsigned int>* visited);
+    static inline bool indexVisited(unsigned int bIndex, std::vector<unsigned int>* visited);
 
     SolverThreadPool* mThreadPool;
     Dictionary* mDictionary;

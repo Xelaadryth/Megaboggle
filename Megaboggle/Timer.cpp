@@ -4,14 +4,14 @@
 Timer::Timer()
 {
     mStartTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch()
+        std::chrono::high_resolution_clock::now().time_since_epoch()
         ).count();
 }
 
 double Timer::stop()
 {
     long long stopTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count();
+        std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 
     return (double)(stopTime - mStartTime) / 1000000.0f;
 }
