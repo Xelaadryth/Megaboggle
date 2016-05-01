@@ -30,8 +30,6 @@ public:
 
     void solve();
 
-    static FILE* solverOutfile;
-
 private:
     static void startSearch(Dictionary* dictionary, const Board* board, unsigned int threadNum);
     //Checks if it's a valid word that has not been found yet
@@ -43,4 +41,5 @@ private:
 
     Dictionary* mDictionary;
     const Board* mBoard;
+    static FILE* solverOutfile;
 };
