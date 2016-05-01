@@ -4,7 +4,7 @@ class Timer
 {
 public:
     Timer();
-    long long stop();
+    double stop();
 private:
     long long mStartTime;
 };

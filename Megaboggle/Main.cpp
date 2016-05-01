@@ -27,20 +27,20 @@ int main(int argc, char** argv)
     printf("Loading dictionary...");
     Timer dictionaryTimer;
     Dictionary* dictionary = new Dictionary(params->mDictPath);
-    printf("%lld milliseconds.\n", dictionaryTimer.stop());
+    printf("%f milliseconds.\n", dictionaryTimer.stop());
 
     printf("Loading board...");
     Timer boardTimer;
     Board* board = new Board(params->mBoardPath);
     Solver* solver = new Solver(dictionary, board, params->mOutfile);
-    printf("%lld milliseconds.\n", boardTimer.stop());
+    printf("%f milliseconds.\n", boardTimer.stop());
 
     printf("\nLoading complete! Hit any key to start solving!\n");
     _getch();
 
     Timer solveTimer;
     solver->solve();
-    printf("\nSolved in %lld milliseconds.\n", solveTimer.stop());
+    printf("\nSolved in %f milliseconds.\n", solveTimer.stop());
 
     //Cleanup!
     delete params;

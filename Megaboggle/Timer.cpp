@@ -3,15 +3,15 @@
 
 Timer::Timer()
 {
-    mStartTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+    mStartTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch()
         ).count();
 }
 
-long long Timer::stop()
+double Timer::stop()
 {
-    long long stopTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+    long long stopTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
 
-    return stopTime - mStartTime;
+    return (double)(stopTime - mStartTime) / 1000000.0f;
 }
