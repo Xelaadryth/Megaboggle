@@ -1,7 +1,7 @@
 #include "Solver.h"
 
-//TODO: Better place for this
-FILE* mOutfile;
+
+FILE* Solver::solverOutfile;
 
 Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::list<unsigned int>* visited, unsigned int threadNum) :
     mDictionary(dictionary),
@@ -17,12 +17,12 @@ Solver::Solver(Dictionary* dictionary, const Board* board, const std::string fil
     mDictionary(dictionary),
     mBoard(board)
 {
-    fopen_s(&mOutfile, filename.c_str(), "w");
+    fopen_s(&(Solver::solverOutfile), filename.c_str(), "w");
 }
 
 Solver::~Solver()
 {
-    fclose(mOutfile);
+    fclose(Solver::solverOutfile);
 }
 
 void Solver::solve()
@@ -94,7 +94,7 @@ void Solver::checkSearch(Search* search)
             word[i] = search->mBoard->mBoard[*it];
             ++i;
         }
-        fprintf(mOutfile, "%s\n", word);
+        fprintf(Solver::solverOutfile, "%s\n", word);
 
         delete word;
     }
