@@ -25,7 +25,7 @@ public:
     Dictionary(const std::string filename);
     ~Dictionary();
 
-    const DictionaryNode* getRoot();
+    DictionaryNode* getRoot();
     bool addWord(std::string word);
     void removeWord(DictionaryNode* node);
     static DictionaryNode* getChild(const DictionaryNode* parent, const char value);

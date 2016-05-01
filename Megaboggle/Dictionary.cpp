@@ -29,7 +29,7 @@ DictionaryNode::~DictionaryNode()
     }
 }
 
-const DictionaryNode* Dictionary::getRoot()
+DictionaryNode* Dictionary::getRoot()
 {
     return mRoot;
 }
@@ -92,10 +92,6 @@ char Dictionary::indexToChar(int index)
     return (char)(index) + 'a';
 }
 
-//TODO: Remove the atomic stuff from Dictionary and move it into the solver
-//TODO: Fix null pointer dereferences from deleting dictionary entries out from under the user.
-//One way is to still null the pointers in the arrays, but instead of deleting just marking as disabled
-//and adding them to a list of "delete later"
 void Dictionary::removeWord(DictionaryNode* node)
 {
     //If we are a leaf node, then remove ourselves and decrement our parent's counter

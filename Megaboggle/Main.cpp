@@ -1,7 +1,7 @@
 //Memory leak detection, comment out this and _CrtDumpMemoryLeaks when ready for production
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
+//#define _CRTDBG_MAP_ALLOC
+//#include <stdlib.h>
+//#include <crtdbg.h>
 //-----------------------------------------------------------------------------------------
 
 #include <conio.h>
@@ -33,23 +33,25 @@ int main(int argc, char** argv)
     printf("Loading board...");
     Timer boardTimer;
     Board* board = new Board(params->mBoardPath);
-    Solver solver(dictionary, board, params->mOutfile);
+    Solver* solver = new Solver(dictionary, board, params->mOutfile);
     printf("%lld milliseconds.\n", boardTimer.stop());
 
     printf("\nLoading complete! Hit any key to start solving!\n");
     _getch();
 
     Timer solveTimer;
-    solver.solve();
+    solver->solve();
     printf("\nSolved in %lld milliseconds.\n", solveTimer.stop());
 
     //Cleanup!
     delete params;
     delete dictionary;
     delete board;
+    delete solver;
 
     //Print out memory leaks
-    _CrtDumpMemoryLeaks();
+    //_CrtDumpMemoryLeaks();
+
     printf("\nPress any key to exit the program.\n");
     _getch();
 
