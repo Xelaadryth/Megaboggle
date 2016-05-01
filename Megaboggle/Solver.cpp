@@ -1,16 +1,68 @@
 #include "Solver.h"
 
-
+//Static variables
 FILE* Solver::solverOutfile;
+std::thread SolverThreadPool::mThreads[NUM_THREADS];
+void(*SolverThreadPool::mFnc)(Search *);
+//Theoretically there's a race condition where if more than MIN_INT threads decrement this at the same time, it overflows to max int
+std::atomic<int> SolverThreadPool::mNumWorkItems;
 
-Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::list<unsigned int>* visited, unsigned int threadNum) :
+Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex, std::list<unsigned int>* visited) :
     mDictionary(dictionary),
     mDNode(dNode),
     mBoard(board),
     mBIndex(bIndex),
-    mVisited(visited),
-    mThreadNum(threadNum)
+    mVisited(visited)
 {
+}
+
+SolverThreadPool::SolverThreadPool(void(*fnc)(Search *), int numWorkItems)
+{
+    SolverThreadPool::mFnc = fnc;
+    SolverThreadPool::mNumWorkItems = numWorkItems;
+}
+
+void SolverThreadPool::start(Dictionary* dictionary, const Board* board)
+{
+    for (unsigned int i = 0; i < NUM_THREADS; ++i)
+    {
+        SolverThreadPool::mThreads[i] = std::thread(SolverThreadPool::startSolverWorker, dictionary, board);
+    }
+}
+
+void SolverThreadPool::join()
+{
+    for (unsigned int i = 0; i < NUM_THREADS; ++i)
+    {
+        SolverThreadPool::mThreads[i].join();
+    }
+}
+
+void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* board)
+{
+    DictionaryNode* root = dictionary->getRoot();
+    //Re-use this vector so we only have to allocate once
+    std::list<unsigned int>* visited = new std::list<unsigned int>();
+    Search* search = new Search(dictionary, root, board, 0, visited);
+
+    //We exit when the work queue is empty
+    while (true)
+    {
+        //Pull from the work queue
+        int bIndex = --SolverThreadPool::mNumWorkItems;
+        if (bIndex < 0) {
+            delete search;
+            delete visited;
+            return;
+        }
+        //Set up and run the search
+        search->mDNode = root;
+        search->mBIndex = bIndex;
+        SolverThreadPool::mFnc(search);
+    }
+
+    delete search;
+    delete visited;
 }
 
 Solver::Solver(Dictionary* dictionary, const Board* board, const std::string filename) :
@@ -27,77 +79,11 @@ Solver::~Solver()
 
 void Solver::solve()
 {
-    unsigned int curLetter = 0;
-    const DictionaryNode* dRoot = mDictionary->getRoot();
+    //Start the thread pool on the work queue
+    SolverThreadPool threadPool(Solver::recursiveSearch, mBoard->mWidth * mBoard->mHeight);
+    threadPool.start(mDictionary, mBoard);
 
-    std::thread mThreads[NUM_THREADS];
-
-    for (unsigned int i = 0; i < NUM_THREADS; ++i)
-    {
-        mThreads[i] = std::thread(startSearch, mDictionary, mBoard, i);
-    }
-
-    for (unsigned int i = 0; i < NUM_THREADS; ++i)
-    {
-        mThreads[i].join();
-    }
-}
-
-void Solver::startSearch(Dictionary* dictionary, const Board* board, unsigned int threadNum)
-{
-    unsigned int width = board->mWidth;
-
-    //Re-use this vector so we only have to allocate once
-    std::list<unsigned int>* visited = new std::list<unsigned int>();
-    DictionaryNode* root = dictionary->getRoot();
-    Search* search = new Search(dictionary, nullptr, board, 0, visited, threadNum);
-
-    unsigned int distributionIndex = 0;
-    for (unsigned int j = 0; j < board->mHeight; ++j)
-    {
-        for (unsigned int i = 0; i < width; ++i)
-        {
-            //Distribute search evenly among threads
-            if (distributionIndex % NUM_THREADS == threadNum)
-            {
-                //Get the place on the board to start from
-                unsigned int bIndex = j * width + i;
-
-                search->mDNode = root;
-                search->mBIndex = bIndex;
-                recursiveSearch(search);
-
-            }
-            ++distributionIndex;
-        }
-    }
-
-    delete search;
-    delete visited;
-}
-
-void Solver::checkSearch(Search* search)
-{
-    //Only one thread is allowed to remove any given word
-    bool expected = true;
-    if (search->mDNode->mIsWord.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed))
-    {
-        //Found a word! Remove it from the dictionary
-        search->mDictionary->removeWord(search->mDNode);
-
-        //Aggregate and print it
-        char* word = new char[search->mDNode->mDepth + 1]();
-
-        unsigned int i = 0;
-        for (std::list<unsigned int>::iterator it = search->mVisited->begin(); it != search->mVisited->end(); ++it)
-        {
-            word[i] = search->mBoard->mBoard[*it];
-            ++i;
-        }
-        fprintf(Solver::solverOutfile, "%s\n", word);
-
-        delete word;
-    }
+    threadPool.join();
 }
 
 void Solver::recursiveSearch(Search* search)
@@ -179,10 +165,34 @@ void Solver::recursiveSearch(Search* search)
         search->mBIndex = oldBIndex + search->mBoard->mWidth;
         recursiveSearch(search);
     }
-
+    
     search->mBIndex = oldBIndex;
     search->mDNode = oldDNode;
     search->mVisited->pop_back();
+}
+
+void Solver::checkSearch(Search* search)
+{
+    //Only one thread is allowed to remove any given word
+    bool expected = true;
+    if (search->mDNode->mIsWord.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed))
+    {
+        //Found a word! Remove it from the dictionary
+        search->mDictionary->removeWord(search->mDNode);
+
+        //Aggregate and print it
+        char* word = new char[search->mDNode->mDepth + 1]();
+
+        unsigned int i = 0;
+        for (std::list<unsigned int>::iterator it = search->mVisited->begin(); it != search->mVisited->end(); ++it)
+        {
+            word[i] = search->mBoard->mBoard[*it];
+            ++i;
+        }
+        fprintf(Solver::solverOutfile, "%s\n", word);
+
+        delete word;
+    }
 }
 
 inline bool Solver::indexVisited(unsigned int bIndex, std::list<unsigned int>* visited)
