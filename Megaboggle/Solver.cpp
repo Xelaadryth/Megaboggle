@@ -49,6 +49,8 @@ void Solver::startSearch(Dictionary* dictionary, const Board* board, unsigned in
 
     //Re-use this vector so we only have to allocate once
     std::list<unsigned int>* visited = new std::list<unsigned int>();
+    DictionaryNode* root = dictionary->getRoot();
+    Search* search = new Search(dictionary, nullptr, board, 0, visited, threadNum);
 
     unsigned int distributionIndex = 0;
     for (unsigned int j = 0; j < board->mHeight; ++j)
@@ -61,15 +63,16 @@ void Solver::startSearch(Dictionary* dictionary, const Board* board, unsigned in
                 //Get the place on the board to start from
                 unsigned int bIndex = j * width + i;
 
-                Search* search = new Search(dictionary, dictionary->getRoot(), board, bIndex, visited, threadNum);
+                search->mDNode = root;
+                search->mBIndex = bIndex;
                 recursiveSearch(search);
 
-                delete search;
             }
             ++distributionIndex;
         }
     }
 
+    delete search;
     delete visited;
 }
 
