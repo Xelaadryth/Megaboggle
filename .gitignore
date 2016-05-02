@@ -16,6 +16,7 @@ Megaboggle/x64/Debug
 *.opensdf
 *.sln
 *.suo
+*.TMP
 
 # Random files
 Megaboggle.VC.VC.opendb
