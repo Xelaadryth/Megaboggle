@@ -9,7 +9,7 @@
 #include "Dictionary.h"
 
 //Customize to match number of processors
-const int NUM_THREADS = 4;
+const int NUM_THREADS = 16;
 //Changes granularity of workQueue items, use for larger and sparser boards
 const bool BY_ROW = false;
 

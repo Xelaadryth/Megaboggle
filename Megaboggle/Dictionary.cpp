@@ -11,11 +11,11 @@ DictionaryNode::DictionaryNode(DictionaryNode* parent, char value, unsigned int 
     mParent(parent),
     mValue(value),
     mDepth(depth),
-    mIsWord(false),
-    mIsDisabled(false),
     mChildrenCount(0),
     mChildren()
 {
+    mIsWord = false;
+    mIsDisabled = false;
 }
 
 DictionaryNode::~DictionaryNode()
