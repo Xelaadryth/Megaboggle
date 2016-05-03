@@ -29,7 +29,7 @@ SolverThreadPool::SolverThreadPool(void(*fnc)(Search *), int numWorkItems)
 
 void SolverThreadPool::start(Dictionary* dictionary, const Board* board)
 {
-    for (unsigned int i = 0; i < NUM_THREADS; ++i)
+    for (unsigned int i = 0; i != NUM_THREADS; ++i)
     {
         SolverThreadPool::mThreads[i] = std::thread(SolverThreadPool::startSolverWorker, dictionary, board);
     }
@@ -37,7 +37,7 @@ void SolverThreadPool::start(Dictionary* dictionary, const Board* board)
 
 void SolverThreadPool::join()
 {
-    for (unsigned int i = 0; i < NUM_THREADS; ++i)
+    for (unsigned int i = 0; i != NUM_THREADS; ++i)
     {
         SolverThreadPool::mThreads[i].join();
     }
@@ -62,7 +62,7 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
 
         if (BY_ROW) {
             //Solve for every element in that row
-            for (unsigned int i = 0; i < board->mWidth; ++i)
+            for (unsigned int i = 0; i != board->mWidth; ++i)
             {
                 unsigned int bIndex = row * board->mWidth + i;
 
