@@ -12,7 +12,7 @@ DictionaryNode::DictionaryNode(DictionaryNode* parent, char value) :
     mChildren(),
     mParent(parent)
 {
-    mIsDisabled = false;
+    mIsDisabled.store(false);
 
     if (parent == nullptr)
     {
@@ -66,13 +66,13 @@ bool Dictionary::addWord(std::string wordString)
     for (unsigned int i = 0; i < wordLength; ++i)
     {
         //Get the index of the next letter
-        int letterIndex = charToIndex(word[i]);
+        int letterIndex = (int)(word[i] - 'a');
 
         //Create the next node if it doesn't already exist
         if (!curNode->mChildren[letterIndex])
         {
             curNode->mChildren[letterIndex] = new DictionaryNode(curNode, word[i]);
-            ++(curNode->mChildrenCount);
+            curNode->mChildrenCount.fetch_add(1);
         }
         curNode = curNode->mChildren[letterIndex];
     }
@@ -105,31 +105,20 @@ void Dictionary::outputResults(const std::string filename)
     fclose(outfile);
 }
 
-int Dictionary::charToIndex(char c)
-{
-    return (int)(c - 'a');
-}
-
+//If we are a leaf node, then remove ourselves and decrement our parent's counter
 void Dictionary::removeWord(DictionaryNode* node)
 {
-    //If we are a leaf node, then remove ourselves and decrement our parent's counter
-    if (node->mChildrenCount == 0)
+    //Multiple people can try to remove this node at the same time, but only one will succeed
+    bool expected = false;
+    if (node->mIsDisabled.compare_exchange_strong(expected, true, std::memory_order_relaxed, std::memory_order_relaxed))
     {
-        //Multiple people can try to remove this node at the same time, but only one will succeed
-        bool expected = false;
-        if (node->mIsDisabled.compare_exchange_strong(expected, true, std::memory_order_relaxed, std::memory_order_relaxed))
+        DictionaryNode* parent = node->mParent;
+
+        //fetch_sub is a post-decrement
+        if (parent->mChildrenCount.fetch_sub(1) == 1 && !parent->mIsDisabled.load() && (!parent->mIsWord || (parent->mIsWord && parent->mIsFound)))
         {
-            //The node is effectively disabled, equivalent to removing it from the dictionary
-            node->mIsDisabled = true;
-
-            DictionaryNode* parent = node->mParent;
-            --parent->mChildrenCount;
-
-            //If a node no longer has children and isn't a word, then we can try to cascade remove that one too
-            if (parent->mChildrenCount == 0 && !parent->mIsDisabled && (!parent->mIsWord || (parent->mIsWord && parent->mIsFound)))
-            {
-                removeWord(parent);
-            }
+            //If a node no longer has children and has nothing depending on it, then we can try to cascade remove that one too
+            removeWord(parent);
         }
     }
 }

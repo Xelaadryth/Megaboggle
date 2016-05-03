@@ -24,7 +24,7 @@ Search::~Search()
 SolverThreadPool::SolverThreadPool(void(*fnc)(Search *), int numWorkItems)
 {
     SolverThreadPool::mFnc = fnc;
-    SolverThreadPool::mNumWorkItems = numWorkItems;
+    SolverThreadPool::mNumWorkItems.store(numWorkItems - 1);
 }
 
 void SolverThreadPool::start(Dictionary* dictionary, const Board* board)
@@ -53,8 +53,8 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
     while (true)
     {
         //Pull a row to process from the work queue
-        int row = --SolverThreadPool::mNumWorkItems;
-        //We decrement first so we get execute on every element from [0, mNumWorkItems - 1]
+        int row = SolverThreadPool::mNumWorkItems.fetch_sub(1);
+        //We decrement after so we execute on every element from [0, mNumWorkItems - 1]
         if (row < 0) {
             delete search;
             return;
@@ -112,36 +112,41 @@ void Solver::solve()
 
 void Solver::recursiveSearch(Search* search)
 {
-    unsigned int oldBIndex = search->mBIndex;
+    unsigned int currentBIndex = search->mBIndex;
 
     //Already using this board node as part of our word
-    if (indexVisited(oldBIndex, search->mVisited))
+    if (indexVisited(currentBIndex, search->mVisited))
     {
         return;
     }
 
     DictionaryNode* oldDNode = search->mDNode;
-    search->mDNode = oldDNode->mChildren[Dictionary::charToIndex(search->mBoard->mBoard[oldBIndex])];
+    search->mDNode = oldDNode->mChildren[(int)(search->mBoard->mBoard[currentBIndex]) - 'a'];
     //No dictionary entries remain along this path; either never existed or was disabled
-    if (!search->mDNode || search->mDNode->mIsDisabled)
+    if (!search->mDNode || search->mDNode->mIsDisabled.load())
     {
         search->mDNode = oldDNode;
         return;
     }
 
     //Add the current letter to the word we're building
-    search->mVisited->push_back(oldBIndex);
+    search->mVisited->push_back(currentBIndex);
 
     //Check if we found a new word
     if (search->mDNode->mIsWord && !search->mDNode->mIsFound)
     {
-        //Found a word! Check if we need to remove it from the dictionary
+        //Found a word!
         search->mDNode->mIsFound = true;
-        Dictionary::removeWord(search->mDNode);
+
+        //Check if we need to remove it from dictionary
+        if (search->mDNode->mChildrenCount.load() == 0)
+        {
+            Dictionary::removeWord(search->mDNode);
+        }
     }
 
-    unsigned int x = oldBIndex % search->mBoard->mWidth;
-    unsigned int y = oldBIndex / search->mBoard->mWidth;
+    unsigned int x = currentBIndex % search->mBoard->mWidth;
+    unsigned int y = currentBIndex / search->mBoard->mWidth;
     bool hasLeft = x > 0;
     bool hasRight = x < search->mBoard->mWidth - 1;
     bool hasUp = y > 0;
@@ -149,53 +154,53 @@ void Solver::recursiveSearch(Search* search)
 
     //Look left
     if (hasLeft) {
-        search->mBIndex = oldBIndex - 1;
+        search->mBIndex = currentBIndex - 1;
         recursiveSearch(search);
 
         //Look up-left
         if (hasUp) {
-            search->mBIndex = oldBIndex - 1 - search->mBoard->mWidth;
+            search->mBIndex = currentBIndex - 1 - search->mBoard->mWidth;
             recursiveSearch(search);
         }
 
         //Look down-left
         if (hasDown) {
-            search->mBIndex = oldBIndex - 1 + search->mBoard->mWidth;
+            search->mBIndex = currentBIndex - 1 + search->mBoard->mWidth;
             recursiveSearch(search);
         }
     }
 
     //Look right
     if (hasRight) {
-        search->mBIndex = oldBIndex + 1;
+        search->mBIndex = currentBIndex + 1;
         recursiveSearch(search);
 
         //Look up-right
         if (hasUp) {
-            search->mBIndex = oldBIndex + 1 - search->mBoard->mWidth;
+            search->mBIndex = currentBIndex + 1 - search->mBoard->mWidth;
             recursiveSearch(search);
         }
 
         //Look down-right
         if (hasDown) {
-            search->mBIndex = oldBIndex + 1 + search->mBoard->mWidth;
+            search->mBIndex = currentBIndex + 1 + search->mBoard->mWidth;
             recursiveSearch(search);
         }
     }
 
     //Look up
     if (hasUp) {
-        search->mBIndex = oldBIndex - search->mBoard->mWidth;
+        search->mBIndex = currentBIndex - search->mBoard->mWidth;
         recursiveSearch(search);
     }
 
     //Look down
     if (hasDown) {
-        search->mBIndex = oldBIndex + search->mBoard->mWidth;
+        search->mBIndex = currentBIndex + search->mBoard->mWidth;
         recursiveSearch(search);
     }
     
-    search->mBIndex = oldBIndex;
+    search->mBIndex = currentBIndex;
     search->mDNode = oldDNode;
     search->mVisited->pop_back();
 }

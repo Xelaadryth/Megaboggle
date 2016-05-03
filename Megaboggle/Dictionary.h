@@ -32,7 +32,6 @@ public:
     bool addWord(std::string word);
     void outputResults(const std::string filename);
     static void removeWord(DictionaryNode* node);
-    static int charToIndex(char c);
 
 private:
     void recursiveFindFound(DictionaryNode* curNode, std::list<std::string>* foundWords);
