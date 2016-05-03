@@ -38,6 +38,6 @@ CommandLineParameters::CommandLineParameters(int argc, char** argv)
 
     if (mHelp || mDictPath == "" || mBoardPath == "" || mOutfile == "")
     {
-        printf("Usage:\n\n  Required:\n    -d    [DICTIONARY PATH]    Path to dictionary file.\n    -i    [BOARD PATH]         Path to Boggle board file.\n    -o    [OUT PATH]           Path to found words output file.\n  Optional:\n    -h                         Display these descriptions.\n    -n    [NUM ITERATIONS]     Number of times to run the solver.\n    -v                         Display runtimes for all sections.\n\n  Example:\n    Megaboggle.exe -d \"D:\\Megaboggle\\Dictionaries\\words.txt\" -i \"D:\\Megaboggle\\Boards\\1000.csv\" -o \"D:\\Megaboggle\\output.txt\" -n 2 -v\n\n  Threading options in top of Solver.h\n");
+        printf("Usage:\n\n  Required:\n    -d    [DICTIONARY PATH]    Path to dictionary file.\n    -i    [BOARD PATH]         Path to Boggle board file.\n    -o    [OUT PATH]           Path to found words output file.\n  Optional:\n    -h                         Display these descriptions.\n    -n    [NUM ITERATIONS]     Number of times to run the solver.\n    -v                         Display runtimes for all sections.\n\n  Example:\n    Megaboggle.exe -d \"..\\Dictionaries\\words.txt\" -i \"..\\Boards\\1000.csv\" -o \"..\\output.txt\" -n 2 -v\n\n  Threading options in top of Solver.h\n");
     }
 }

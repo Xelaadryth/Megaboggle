@@ -1,13 +1,16 @@
 # Debug/Release files
 output.txt
 Debug/
-Release/
 Megaboggle/Debug/
 Megaboggle/Release/
 Megaboggle/x64/Debug
 
 # Visual Studio
 .vs/
+*.log
+*.tlog
+*.lastbuildstate
+*.pdb
 *.vcxproj*
 *.vsp
 *.psess
@@ -47,6 +50,5 @@ Megaboggle.VC.db
 *.lib
 
 # Executables
-*.exe
 *.out
 *.app

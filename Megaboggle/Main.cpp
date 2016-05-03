@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 
     if (params->mVerbose)
     {
-        printf("Loading dictionary...");
+        printf("\nLoading dictionary...");
     }
     Timer dictionaryTimer;
     Dictionary* dictionary = new Dictionary(params->mDictPath);
