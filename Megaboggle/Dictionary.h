@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <fstream>
 #include <list>
 #include <string>
+#include <vector>
 
 const int LETTER_COUNT = 26;
 
@@ -34,6 +36,6 @@ public:
     static void removeWord(DictionaryNode* node);
 
 private:
-    void recursiveFindFound(DictionaryNode* curNode, std::list<std::string>* foundWords);
+    void recursiveFindFound(DictionaryNode* curNode, std::vector<std::string>* foundWords);
     DictionaryNode* mRoot;
 };
