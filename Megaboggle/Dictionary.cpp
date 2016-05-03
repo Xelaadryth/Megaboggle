@@ -85,19 +85,19 @@ bool Dictionary::addWord(std::string wordString)
 
 void Dictionary::outputResults(const std::string filename)
 {
-    std::list<std::string> foundWords;
+    std::list<std::string>* foundWords = new std::list<std::string>();
 
     //Get all of the words from the dictionary
-    recursiveFindFound(mRoot, &foundWords);
+    recursiveFindFound(mRoot, foundWords);
 
-    foundWords.sort();
+    foundWords->sort();
 
     FILE* outfile;
     fopen_s(&outfile, filename.c_str(), "w");
     //Print out the number of words and then all of the words alphabetically
-    fprintf(outfile, "%d\n", (int)foundWords.size());
+    fprintf(outfile, "%d\n", (int)foundWords->size());
 
-    for (std::list<std::string>::const_iterator iterator = foundWords.begin(), end = foundWords.end(); iterator != end; ++iterator)
+    for (std::list<std::string>::const_iterator iterator = foundWords->begin(), end = foundWords->end(); iterator != end; ++iterator)
     {
         fprintf(outfile, "%s\n", (*iterator).c_str());
     }
