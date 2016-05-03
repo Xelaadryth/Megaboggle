@@ -137,7 +137,7 @@ void Solver::recursiveSearch(Search* search)
         search->mDNode->mIsFound = true;
 
         //Check if we need to remove it from dictionary
-        if (numChildren == 0)
+        if (!numChildren)
         {
             //Removing words saves us time later, especially for repetitive boards
             Dictionary::removeWord(search->mDNode);
@@ -147,7 +147,7 @@ void Solver::recursiveSearch(Search* search)
     }
 
     //No need to search farther if the dictionary has no more valid words beneath it
-    if (numChildren == 0)
+    if (!numChildren)
     {
         search->mDNode = oldDNode;
         return;
@@ -158,18 +158,18 @@ void Solver::recursiveSearch(Search* search)
 
     unsigned int x = currentBIndex % search->mBoard->mWidth;
     unsigned int y = currentBIndex / search->mBoard->mWidth;
-    bool hasLeft = x > 0;
+    //bool hasLeft = x > 0;
     bool hasRight = x < search->mBoard->mWidth - 1;
-    bool hasUp = y > 0;
+    //bool hasUp = y > 0;
     bool hasDown = y < search->mBoard->mHeight - 1;
 
-    //Look left
-    if (hasLeft) {
+    //Look left: hasLeft == x > 0 == x since x is an unsigned int
+    if (x) {
         search->mBIndex = currentBIndex - 1;
         recursiveSearch(search);
 
-        //Look up-left
-        if (hasUp) {
+        //Look up-left: hasUp == y > 0 == y since y is an unsigned int
+        if (y) {
             search->mBIndex = currentBIndex - 1 - search->mBoard->mWidth;
             recursiveSearch(search);
         }
@@ -187,7 +187,7 @@ void Solver::recursiveSearch(Search* search)
         recursiveSearch(search);
 
         //Look up-right
-        if (hasUp) {
+        if (y) {
             search->mBIndex = currentBIndex + 1 - search->mBoard->mWidth;
             recursiveSearch(search);
         }
@@ -200,7 +200,7 @@ void Solver::recursiveSearch(Search* search)
     }
 
     //Look up
-    if (hasUp) {
+    if (y) {
         search->mBIndex = currentBIndex - search->mBoard->mWidth;
         recursiveSearch(search);
     }
@@ -218,9 +218,9 @@ void Solver::recursiveSearch(Search* search)
 
 inline bool Solver::indexVisited(unsigned int bIndex, std::vector<unsigned int>* visited)
 {
-    for (unsigned int i = 0; i < visited->size(); ++i)
+    for (std::vector<unsigned int>::const_iterator iterator = visited->begin(), end = visited->end(); iterator != end; ++iterator)
     {
-        if (bIndex == (*visited)[i])
+        if (bIndex == *iterator)
         {
             return true;
         }

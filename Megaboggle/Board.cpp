@@ -46,7 +46,7 @@ Board::Board(const std::string filename)
 
 		mBoard = new char[mHeight * mWidth]();
 
-		for (unsigned int i = 0; i < charList.size(); ++i)
+		for (size_t i = 0, length = charList.size(); i < length; ++i)
 		{
 			mBoard[i] = charList[i];
 		}

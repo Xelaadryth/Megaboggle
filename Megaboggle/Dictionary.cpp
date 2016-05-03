@@ -97,7 +97,7 @@ void Dictionary::outputResults(const std::string filename)
     //Print out the number of words and then all of the words alphabetically
     fprintf(outfile, "%d\n", (int)foundWords.size());
 
-    for (std::list<std::string>::const_iterator iterator = foundWords.begin(); iterator != foundWords.end(); ++iterator)
+    for (std::list<std::string>::const_iterator iterator = foundWords.begin(), end = foundWords.end(); iterator != end; ++iterator)
     {
         fprintf(outfile, "%s\n", (*iterator).c_str());
     }
