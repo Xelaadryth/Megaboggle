@@ -125,17 +125,27 @@ void Dictionary::removeWord(DictionaryNode* node)
 
 void Dictionary::recursiveFindFound(DictionaryNode* curNode, std::vector<std::string>* foundWords)
 {
-    if (curNode == nullptr) {
-        return;
-    }
+    //Re-enable the dictionary if necessary
+    curNode->mIsDisabled.store(false);
+
     if (curNode->mIsFound)
     {
         foundWords->push_back(curNode->mWord);
+        curNode->mIsFound = false;
     }
+
+    int numChildren = 0;
     for (unsigned int i = 0; i < LETTER_COUNT; ++i)
     {
-        recursiveFindFound(curNode->mChildren[i], foundWords);
+        DictionaryNode* child = curNode->mChildren[i];
+        if (child)
+        {
+            ++numChildren;
+            recursiveFindFound(child, foundWords);
+        }
     }
+
+    curNode->mChildrenCount.store(numChildren);
 }
 
 Dictionary::Dictionary(const std::string filename)

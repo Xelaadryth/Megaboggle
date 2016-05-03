@@ -36,6 +36,7 @@ public:
     static void removeWord(DictionaryNode* node);
 
 private:
+    //Counts number found and resets dictionary to initial state
     void recursiveFindFound(DictionaryNode* curNode, std::vector<std::string>* foundWords);
     DictionaryNode* mRoot;
 };

@@ -14,19 +14,8 @@
 #include "Timer.h"
 
 
-void run(CommandLineParameters* params)
+void run(Dictionary* dictionary, CommandLineParameters* params)
 {
-    if (params->mVerbose)
-    {
-        printf("Loading dictionary...");
-    }
-    Timer dictionaryTimer;
-    Dictionary* dictionary = new Dictionary(params->mDictPath);
-    if (params->mVerbose)
-    {
-        printf("%f milliseconds\n", dictionaryTimer.stop());
-    }
-
     if (params->mVerbose)
     {
         printf("Loading board...");
@@ -60,7 +49,6 @@ void run(CommandLineParameters* params)
     }
 
     //Cleanup!
-    delete dictionary;
     delete board;
     delete solver;
 }
@@ -74,6 +62,17 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    if (params->mVerbose)
+    {
+        printf("Loading dictionary...");
+    }
+    Timer dictionaryTimer;
+    Dictionary* dictionary = new Dictionary(params->mDictPath);
+    if (params->mVerbose)
+    {
+        printf("%f milliseconds\n", dictionaryTimer.stop());
+    }
+
     for (unsigned int i = 0; i < params->mNumRuns; ++i)
     {
         if (params->mVerbose && i)
@@ -81,8 +80,11 @@ int main(int argc, char** argv)
             printf("\n    ----------------------------\n\n");
         }
 
-        run(params);
+        run(dictionary, params);
     }
+
+    //Cleanup!
+    delete dictionary;
     delete params;
 
     //Print out memory leaks
