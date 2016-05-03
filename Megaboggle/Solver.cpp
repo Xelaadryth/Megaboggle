@@ -129,21 +129,32 @@ void Solver::recursiveSearch(Search* search)
         return;
     }
 
-    //Add the current letter to the word we're building
-    search->mVisited->push_back(currentBIndex);
-
     //Check if we found a new word
+    int numChildren = search->mDNode->mChildrenCount.load();
     if (search->mDNode->mIsWord && !search->mDNode->mIsFound)
     {
         //Found a word!
         search->mDNode->mIsFound = true;
 
         //Check if we need to remove it from dictionary
-        if (search->mDNode->mChildrenCount.load() == 0)
+        if (numChildren == 0)
         {
+            //Removing words saves us time later, especially for repetitive boards
             Dictionary::removeWord(search->mDNode);
+            search->mDNode = oldDNode;
+            return;
         }
     }
+
+    //No need to search farther if the dictionary has no more valid words beneath it
+    if (numChildren == 0)
+    {
+        search->mDNode = oldDNode;
+        return;
+    }
+
+    //Add the current board position to our visited list
+    search->mVisited->push_back(currentBIndex);
 
     unsigned int x = currentBIndex % search->mBoard->mWidth;
     unsigned int y = currentBIndex / search->mBoard->mWidth;
