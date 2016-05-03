@@ -17,7 +17,7 @@ Board::Board(const std::string filename)
 		unsigned int j;
         for (j = 0; std::getline(boardFile, line); ++j)
         {
-			unsigned int lineLength = line.length();
+			size_t lineLength = line.length();
 
             for (unsigned int lineIndex = 0; lineIndex < lineLength; lineIndex++)
             {
@@ -31,7 +31,7 @@ Board::Board(const std::string filename)
             //Record the number of columns after the first row
             if (j == 0)
             {
-                mWidth = charList.size();
+                mWidth = (unsigned int)charList.size();
             }
         }
 

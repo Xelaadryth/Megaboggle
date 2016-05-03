@@ -1,7 +1,6 @@
 #include "Solver.h"
 
 //Static variables
-FILE* Solver::solverOutfile;
 std::thread SolverThreadPool::mThreads[NUM_THREADS];
 void(*SolverThreadPool::mFnc)(Search *);
 //Theoretically there's a race condition where more than MIN_INT threads
@@ -9,10 +8,10 @@ void(*SolverThreadPool::mFnc)(Search *);
 std::atomic<int> SolverThreadPool::mNumWorkItems;
 
 Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex) :
-    mDictionary(dictionary),
     mDNode(dNode),
+    mBIndex(bIndex),
     mBoard(board),
-    mBIndex(bIndex)
+    mDictionary(dictionary)
 {
     mVisited = new std::vector<unsigned int>();
 }
@@ -85,7 +84,7 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
     delete search;
 }
 
-Solver::Solver(Dictionary* dictionary, const Board* board, const std::string filename) :
+Solver::Solver(Dictionary* dictionary, const Board* board) :
     mDictionary(dictionary),
     mBoard(board)
 {
@@ -97,12 +96,10 @@ Solver::Solver(Dictionary* dictionary, const Board* board, const std::string fil
     {
         mThreadPool = new SolverThreadPool(Solver::recursiveSearch, board->mWidth * board->mHeight);
     }
-    fopen_s(&(Solver::solverOutfile), filename.c_str(), "w");
 }
 
 Solver::~Solver()
 {
-    fclose(Solver::solverOutfile);
     delete mThreadPool;
 }
 
@@ -135,8 +132,13 @@ void Solver::recursiveSearch(Search* search)
     //Add the current letter to the word we're building
     search->mVisited->push_back(oldBIndex);
 
-    //Check if we have a word yet
-    checkSearch(search);
+    //Check if we found a new word
+    if (search->mDNode->mIsWord && !search->mDNode->mIsFound)
+    {
+        //Found a word! Check if we need to remove it from the dictionary
+        search->mDNode->mIsFound = true;
+        Dictionary::removeWord(search->mDNode);
+    }
 
     unsigned int x = oldBIndex % search->mBoard->mWidth;
     unsigned int y = oldBIndex / search->mBoard->mWidth;
@@ -196,32 +198,6 @@ void Solver::recursiveSearch(Search* search)
     search->mBIndex = oldBIndex;
     search->mDNode = oldDNode;
     search->mVisited->pop_back();
-}
-
-void Solver::checkSearch(Search* search)
-{
-    //Only one thread is allowed to remove any given word
-    bool expected = true;
-    if (search->mDNode->mIsWord.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed))
-    {
-        //Found a word! Remove it from the dictionary
-        Dictionary::removeWord(search->mDNode);
-
-        //Aggregate and print it
-        unsigned int length = search->mVisited->size();
-        char* word = new char[length + 1];
-        for (unsigned int i = 0; i < length; ++i)
-        {
-            //Look up each character from the board
-            word[i] = search->mBoard->mBoard[(*search->mVisited)[i]];
-        }
-        word[length] = '\0';
-
-        //Print each word to file. fprintf is thread-safe and won't garble itself
-        fprintf(Solver::solverOutfile, "%s\n", word);
-
-        delete word;
-    }
 }
 
 inline bool Solver::indexVisited(unsigned int bIndex, std::vector<unsigned int>* visited)

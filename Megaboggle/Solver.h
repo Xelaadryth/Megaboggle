@@ -18,11 +18,11 @@ struct Search
     Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex);
     ~Search();
 
-    Dictionary* mDictionary;
     DictionaryNode* mDNode;
-    const Board* mBoard;
     unsigned int mBIndex;
+    const Board* mBoard;
     std::vector<unsigned int>* mVisited;
+    Dictionary* mDictionary;
 };
 
 //TODO: Make this a template class once we figure out how std::thread uses va_list or whatever
@@ -43,7 +43,6 @@ private:
 
     static void(*mFnc)(Search *);
     //SolverThreadPool doesn't manage its own work queue since it is passed in
-    //TODO: Figure out a way to store data types as something other than pointers
     static std::atomic<int> mNumWorkItems;
 };
 
@@ -51,21 +50,18 @@ class Solver
 {
 public:
     //TODO: If we re-use this dictionary, either reset it or don't modify it
-    Solver(Dictionary* dictionary, const Board* board, const std::string filename);
+    Solver(Dictionary* dictionary, const Board* board);
     ~Solver();
 
     void solve();
 
 private:
-    //Checks if it's a valid word that has not been found yet
-    static void checkSearch(Search* search);
     //Depth-first search the calls checkSearch at every step
     static void recursiveSearch(Search* search);
     //Checks if an index is in the visited index list
     static inline bool indexVisited(unsigned int bIndex, std::vector<unsigned int>* visited);
 
-    SolverThreadPool* mThreadPool;
     Dictionary* mDictionary;
     const Board* mBoard;
-    static FILE* solverOutfile;
+    SolverThreadPool* mThreadPool;
 };

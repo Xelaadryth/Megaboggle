@@ -1,21 +1,27 @@
 #pragma once
 
-#include <atomic>
-#include <fstream>
-#include <string>
 #include "Dictionary.h"
 
 #define MIN_WORD_LENGTH 3
 
-DictionaryNode::DictionaryNode(DictionaryNode* parent, char value, unsigned int depth) :
-    mParent(parent),
+DictionaryNode::DictionaryNode(DictionaryNode* parent, char value) :
     mValue(value),
-    mDepth(depth),
+    mIsWord(false),
+    mIsFound(false),
     mChildrenCount(0),
-    mChildren()
+    mChildren(),
+    mParent(parent)
 {
-    mIsWord = false;
     mIsDisabled = false;
+
+    if (parent == nullptr)
+    {
+        mWord = "";
+    }
+    else
+    {
+        mWord = parent->mWord + value;
+    }
 }
 
 DictionaryNode::~DictionaryNode()
@@ -65,7 +71,7 @@ bool Dictionary::addWord(std::string wordString)
         //Create the next node if it doesn't already exist
         if (!curNode->mChildren[letterIndex])
         {
-            curNode->mChildren[letterIndex] = new DictionaryNode(curNode, word[i], curNode->mDepth + 1);
+            curNode->mChildren[letterIndex] = new DictionaryNode(curNode, word[i]);
             ++(curNode->mChildrenCount);
         }
         curNode = curNode->mChildren[letterIndex];
@@ -75,6 +81,28 @@ bool Dictionary::addWord(std::string wordString)
     curNode->mIsWord = true;
 
     return true;
+}
+
+void Dictionary::outputResults(const std::string filename)
+{
+    std::list<std::string> foundWords;
+
+    //Get all of the words from the dictionary
+    recursiveFindFound(mRoot, &foundWords);
+
+    foundWords.sort();
+
+    FILE* outfile;
+    fopen_s(&outfile, filename.c_str(), "w");
+    //Print out the number of words and then all of the words alphabetically
+    fprintf(outfile, "%d\n", (int)foundWords.size());
+
+    for (std::list<std::string>::const_iterator iterator = foundWords.begin(); iterator != foundWords.end(); ++iterator)
+    {
+        fprintf(outfile, "%s\n", (*iterator).c_str());
+    }
+
+    fclose(outfile);
 }
 
 int Dictionary::charToIndex(char c)
@@ -91,14 +119,14 @@ void Dictionary::removeWord(DictionaryNode* node)
         bool expected = false;
         if (node->mIsDisabled.compare_exchange_strong(expected, true, std::memory_order_relaxed, std::memory_order_relaxed))
         {
-            //The node is effectively disabled
+            //The node is effectively disabled, equivalent to removing it from the dictionary
             node->mIsDisabled = true;
 
             DictionaryNode* parent = node->mParent;
             --parent->mChildrenCount;
 
             //If a node no longer has children and isn't a word, then we can try to cascade remove that one too
-            if (!parent->mIsWord)
+            if (parent->mChildrenCount == 0 && !parent->mIsDisabled && (!parent->mIsWord || (parent->mIsWord && parent->mIsFound)))
             {
                 removeWord(parent);
             }
@@ -106,9 +134,24 @@ void Dictionary::removeWord(DictionaryNode* node)
     }
 }
 
+void Dictionary::recursiveFindFound(DictionaryNode* curNode, std::list<std::string>* foundWords)
+{
+    if (curNode == nullptr) {
+        return;
+    }
+    if (curNode->mIsFound)
+    {
+        foundWords->push_back(curNode->mWord);
+    }
+    for (unsigned int i = 0; i < LETTER_COUNT; ++i)
+    {
+        recursiveFindFound(curNode->mChildren[i], foundWords);
+    }
+}
+
 Dictionary::Dictionary(const std::string filename)
 {
-    mRoot = new DictionaryNode(nullptr, '0', 0);
+    mRoot = new DictionaryNode(nullptr, '0');
 
     //Add all the words!
     std::string line;

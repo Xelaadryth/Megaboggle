@@ -4,7 +4,6 @@
 //#include <crtdbg.h>
 //-----------------------------------------------------------------------------------------
 #include <conio.h>
-#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -32,15 +31,21 @@ int main(int argc, char** argv)
     printf("Loading board...");
     Timer boardTimer;
     Board* board = new Board(params->mBoardPath);
-    Solver* solver = new Solver(dictionary, board, params->mOutfile);
+    Solver* solver = new Solver(dictionary, board);
     printf("%f milliseconds.\n", boardTimer.stop());
 
     printf("\nLoading complete! Hit any key to start solving!\n");
     _getch();
+    printf("\nSolving...");
 
     Timer solveTimer;
     solver->solve();
-    printf("\nSolved in %f milliseconds.\n", solveTimer.stop());
+    printf("%f milliseconds.\n", solveTimer.stop());
+
+    printf("\nFormatting output for results...");
+    Timer sortTimer;
+    dictionary->outputResults(params->mOutfile);
+    printf("%f milliseconds.\n", sortTimer.stop());
 
     //Cleanup!
     delete params;
