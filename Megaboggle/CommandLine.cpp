@@ -20,23 +20,24 @@ CommandLineParameters::CommandLineParameters(int argc, char** argv)
             case 'i':
                 mBoardPath = argv[++i];
                 break;
+            case 'h':
+                mHelp = true;
+                break;
+            case 'n':
+                mNumRuns = atoi(argv[++i]);
+                break;
             case 'o':
                 mOutfile = argv[++i];
+                break;
+            case 'v':
+                mVerbose = true;
                 break;
             }
         }
     }
 
-    if (mDictPath == "")
+    if (mHelp || mDictPath == "" || mBoardPath == "" || mOutfile == "")
     {
-        printf("Please input -d [DICTIONARY PATH].\n");
-    }
-    if (mBoardPath == "")
-    {
-        printf("Please input -i [BOARD PATH].\n");
-    }
-    if (mOutfile == "")
-    {
-        printf("Please input -o [OUT PATH].\n");
+        printf("Usage:\n\n  Required:\n    -d    [DICTIONARY PATH]    Path to dictionary file.\n    -i    [BOARD PATH]         Path to Boggle board file.\n    -o    [OUT PATH]           Path to found words output file.\n  Optional:\n    -h                         Display these descriptions.\n    -n    [NUM ITERATIONS]     Number of times to run the solver.\n    -v                         Display runtimes for all sections.\n\n  Example:\n    Megaboggle.exe -d \"D:\\Megaboggle\\Dictionaries\\words.txt\" -i \"D:\\Megaboggle\\Boards\\1000.txt\" -o \"D:\\Megaboggle\\output.txt\" -n 2 -v\n\n  Threading options in top of Solver.h\n");
     }
 }

@@ -14,44 +14,76 @@
 #include "Timer.h"
 
 
+void run(CommandLineParameters* params)
+{
+    if (params->mVerbose)
+    {
+        printf("Loading dictionary...");
+    }
+    Timer dictionaryTimer;
+    Dictionary* dictionary = new Dictionary(params->mDictPath);
+    if (params->mVerbose)
+    {
+        printf("%f milliseconds\n", dictionaryTimer.stop());
+    }
+
+    if (params->mVerbose)
+    {
+        printf("Loading board...");
+    }
+    Timer boardTimer;
+    Board* board = new Board(params->mBoardPath);
+    Solver* solver = new Solver(dictionary, board);
+    if (params->mVerbose)
+    {
+        printf("%f milliseconds\n", boardTimer.stop());
+    }
+
+    if (params->mVerbose)
+    {
+        printf("\nSolving...");
+    }
+
+    Timer solveTimer;
+    solver->solve();
+    printf("%f milliseconds\n", solveTimer.stop());
+
+    if (params->mVerbose)
+    {
+        printf("\nFormatting output for results...");
+    }
+    Timer sortTimer;
+    dictionary->outputResults(params->mOutfile);
+    if (params->mVerbose)
+    {
+        printf("%f milliseconds\n", sortTimer.stop());
+    }
+
+    //Cleanup!
+    delete dictionary;
+    delete board;
+    delete solver;
+}
+
+
 int main(int argc, char** argv)
 {
     CommandLineParameters* params = new CommandLineParameters(argc, argv);
-    if (params->mDictPath == "" || params->mBoardPath == "" || params->mOutfile == "") {
-        printf("Additional options in top of Solver.h\n");
+    if (params->mHelp || params->mDictPath == "" || params->mBoardPath == "" || params->mOutfile == "") {
         _getch();
         return -1;
     }
 
-    printf("Loading dictionary...");
-    Timer dictionaryTimer;
-    Dictionary* dictionary = new Dictionary(params->mDictPath);
-    printf("%f milliseconds.\n", dictionaryTimer.stop());
+    for (unsigned int i = 0; i < params->mNumRuns; ++i)
+    {
+        if (params->mVerbose && i)
+        {
+            printf("\n    ----------------------------\n\n");
+        }
 
-    printf("Loading board...");
-    Timer boardTimer;
-    Board* board = new Board(params->mBoardPath);
-    Solver* solver = new Solver(dictionary, board);
-    printf("%f milliseconds.\n", boardTimer.stop());
-
-    printf("\nLoading complete! Hit any key to start solving!\n");
-    _getch();
-    printf("\nSolving...");
-
-    Timer solveTimer;
-    solver->solve();
-    printf("%f milliseconds.\n", solveTimer.stop());
-
-    printf("\nFormatting output for results...");
-    Timer sortTimer;
-    dictionary->outputResults(params->mOutfile);
-    printf("%f milliseconds.\n", sortTimer.stop());
-
-    //Cleanup!
+        run(params);
+    }
     delete params;
-    delete dictionary;
-    delete board;
-    delete solver;
 
     //Print out memory leaks
     //_CrtDumpMemoryLeaks();
