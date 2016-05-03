@@ -33,8 +33,8 @@ public:
     SolverThreadPool(void(*fnc)(Search *), int numWorkItems);
 
     //Must fill stack with tasks before starting, not smart enough to work with dynamically produced work
-    void start(Dictionary* dictionary, const Board* board);
-    void join();
+    static void start(Dictionary* dictionary, const Board* board);
+    static void join();
 
 private:
     static void startSolverWorker(Dictionary* dictionary, const Board* board);
