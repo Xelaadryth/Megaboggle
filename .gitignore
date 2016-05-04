@@ -1,15 +1,15 @@
 # Debug/Release files
 output.txt
 Debug/
-Megaboggle/Debug/
-Megaboggle/Release/
-Megaboggle/x64/Debug
+x64/
 
 # Visual Studio
 .vs/
 *.log
 *.tlog
 *.lastbuildstate
+*.iobj
+*.ipdb
 *.pdb
 *.vcxproj*
 *.vsp
