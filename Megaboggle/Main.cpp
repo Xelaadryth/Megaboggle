@@ -83,6 +83,35 @@ int main(int argc, char** argv)
         run(dictionary, params);
     }
 
+    //Generate a randomized board
+    if (params->mGenerateBoardSize)
+    {
+        if (params->mVerbose)
+        {
+            printf("\nGenerating board at C:\\board.csv...");
+        }
+        Timer generateTimer;
+
+        FILE* outfile;
+        fopen_s(&outfile, "C:\\board.csv", "w");
+
+        for (unsigned int y = 0; y < params->mGenerateBoardSize; ++y)
+        {
+            for (unsigned int x = 0; x < params->mGenerateBoardSize - 1; ++x)
+            {
+                fprintf(outfile, "%c,", 'a' + rand() % 26);
+            }
+            fprintf(outfile, "%c\n", 'a' + rand() % 26);
+        }
+
+        fclose(outfile);
+
+        if (params->mVerbose)
+        {
+            printf("%f milliseconds\n", generateTimer.stop());
+        }
+    }
+
     //Cleanup!
     delete dictionary;
     delete params;
