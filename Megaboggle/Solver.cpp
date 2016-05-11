@@ -1,37 +1,31 @@
 #include "Solver.h"
 
-//Static variables
-std::thread SolverThreadPool::mThreads[NUM_THREADS];
-void(*SolverThreadPool::mFnc)(Search *);
-//Theoretically there's a race condition where more than MIN_INT threads
-//decrement at the same time and it overflows to max int
-std::atomic<int> SolverThreadPool::mNumWorkItems;
 
-Search::Search(Dictionary* dictionary, DictionaryNode* dNode, const Board* board, unsigned int bIndex) :
+Search::Search(Dictionary& dictionary, DictionaryNode* dNode, const Board& board, unsigned int bIndex) :
     mDNode(dNode),
     mBIndex(bIndex),
     mBoard(board),
     mDictionary(dictionary)
 {
-    mVisited = new std::vector<unsigned int>();
+    //TODO: mVisited = new char[mDictionary.mMaxDepth]();
+    mVisited.reserve(30);
 }
 
 Search::~Search()
 {
-    delete mVisited;
 }
 
-SolverThreadPool::SolverThreadPool(void(*fnc)(Search *), int numWorkItems)
+SolverThreadPool::SolverThreadPool(ThreadFunction fnc, int numWorkItems)
 {
-    SolverThreadPool::mFnc = fnc;
-    SolverThreadPool::mNumWorkItems.store(numWorkItems - 1);
+    mFnc = fnc;
+    mNumWorkItems.store(numWorkItems - 1);
 }
 
-void SolverThreadPool::start(Dictionary* dictionary, const Board* board)
+void SolverThreadPool::start(Dictionary& dictionary, const Board& board)
 {
     for (unsigned int i = 0; i != NUM_THREADS; ++i)
     {
-        SolverThreadPool::mThreads[i] = std::thread(SolverThreadPool::startSolverWorker, dictionary, board);
+        mThreads[i] = std::thread(SolverThreadPool::startSolverWorker, this, &dictionary, &board);
     }
 }
 
@@ -39,21 +33,21 @@ void SolverThreadPool::join()
 {
     for (unsigned int i = 0; i != NUM_THREADS; ++i)
     {
-        SolverThreadPool::mThreads[i].join();
+        mThreads[i].join();
     }
 }
 
-void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* board)
+void SolverThreadPool::startSolverWorker(SolverThreadPool* threadPool, Dictionary* dictionary, const Board* board)
 {
     DictionaryNode* root = dictionary->getRoot();
     //Re-use this vector so we only have to allocate once
-    Search* search = new Search(dictionary, root, board, 0);
+    Search* search = new Search(*dictionary, root, *board, 0);
 
     //We exit when the work queue is empty
     while (true)
     {
         //Pull a row to process from the work queue
-        int row = SolverThreadPool::mNumWorkItems.fetch_sub(1);
+        int row = threadPool->mNumWorkItems.fetch_sub(1);
         //We decrement after so we execute on every element from [0, mNumWorkItems - 1]
         if (row < 0) {
             delete search;
@@ -69,7 +63,7 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
                 //Set up and run the search
                 search->mDNode = root;
                 search->mBIndex = bIndex;
-                SolverThreadPool::mFnc(search);
+                threadPool->mFnc(search);
             }
         }
         else
@@ -77,37 +71,29 @@ void SolverThreadPool::startSolverWorker(Dictionary* dictionary, const Board* bo
             //Set up and run the search for an individual element
             search->mDNode = root;
             search->mBIndex = row;
-            SolverThreadPool::mFnc(search);
+            threadPool->mFnc(search);
         }
     }
 
     delete search;
 }
 
-Solver::Solver(Dictionary* dictionary, const Board* board) :
-    mDictionary(dictionary),
-    mBoard(board)
+Solver::Solver(Dictionary& dictionary, const Board& board)
+    : mDictionary(dictionary)
+    , mBoard(board)
+    , mThreadPool(Solver::recursiveSearch, BY_ROW ? board.mHeight : board.mWidth * board.mHeight)
 {
-    //Chop up work to put in the work queue
-    if (BY_ROW) {
-        mThreadPool = new SolverThreadPool(Solver::recursiveSearch, board->mHeight);
-    }
-    else
-    {
-        mThreadPool = new SolverThreadPool(Solver::recursiveSearch, board->mWidth * board->mHeight);
-    }
 }
 
 Solver::~Solver()
 {
-    delete mThreadPool;
 }
 
 void Solver::solve()
 {
     //Start the thread pool on the work queue
-    mThreadPool->start(mDictionary, mBoard);
-    mThreadPool->join();
+    mThreadPool.start(mDictionary, mBoard);
+    mThreadPool.join();
 }
 
 void Solver::recursiveSearch(Search* search)
@@ -121,7 +107,7 @@ void Solver::recursiveSearch(Search* search)
     }
 
     DictionaryNode* oldDNode = search->mDNode;
-    search->mDNode = oldDNode->mChildren[(int)(search->mBoard->mBoard[currentBIndex]) - 'a'];
+    search->mDNode = oldDNode->mChildren[(int)(search->mBoard.mBoard[currentBIndex]) - 'a'].get();
     //No dictionary entries remain along this path; either never existed or was disabled
     if (!search->mDNode || search->mDNode->mIsDisabled.load())
     {
@@ -154,14 +140,14 @@ void Solver::recursiveSearch(Search* search)
     }
 
     //Add the current board position to our visited list
-    search->mVisited->push_back(currentBIndex);
+    search->mVisited.push_back(currentBIndex);
 
-    unsigned int x = currentBIndex % search->mBoard->mWidth;
-    unsigned int y = currentBIndex / search->mBoard->mWidth;
+    unsigned int x = currentBIndex % search->mBoard.mWidth;
+    unsigned int y = currentBIndex / search->mBoard.mWidth;
     //bool hasLeft = x > 0;
-    bool hasRight = x < search->mBoard->mWidth - 1;
+    bool hasRight = x < search->mBoard.mWidth - 1;
     //bool hasUp = y > 0;
-    bool hasDown = y < search->mBoard->mHeight - 1;
+    bool hasDown = y < search->mBoard.mHeight - 1;
 
     //Look left: hasLeft == x > 0 == x since x is an unsigned int
     if (x) {
@@ -170,13 +156,13 @@ void Solver::recursiveSearch(Search* search)
 
         //Look up-left: hasUp == y > 0 == y since y is an unsigned int
         if (y) {
-            search->mBIndex = currentBIndex - 1 - search->mBoard->mWidth;
+            search->mBIndex = currentBIndex - 1 - search->mBoard.mWidth;
             recursiveSearch(search);
         }
 
         //Look down-left
         if (hasDown) {
-            search->mBIndex = currentBIndex - 1 + search->mBoard->mWidth;
+            search->mBIndex = currentBIndex - 1 + search->mBoard.mWidth;
             recursiveSearch(search);
         }
     }
@@ -188,37 +174,37 @@ void Solver::recursiveSearch(Search* search)
 
         //Look up-right
         if (y) {
-            search->mBIndex = currentBIndex + 1 - search->mBoard->mWidth;
+            search->mBIndex = currentBIndex + 1 - search->mBoard.mWidth;
             recursiveSearch(search);
         }
 
         //Look down-right
         if (hasDown) {
-            search->mBIndex = currentBIndex + 1 + search->mBoard->mWidth;
+            search->mBIndex = currentBIndex + 1 + search->mBoard.mWidth;
             recursiveSearch(search);
         }
     }
 
     //Look up
     if (y) {
-        search->mBIndex = currentBIndex - search->mBoard->mWidth;
+        search->mBIndex = currentBIndex - search->mBoard.mWidth;
         recursiveSearch(search);
     }
 
     //Look down
     if (hasDown) {
-        search->mBIndex = currentBIndex + search->mBoard->mWidth;
+        search->mBIndex = currentBIndex + search->mBoard.mWidth;
         recursiveSearch(search);
     }
     
     search->mBIndex = currentBIndex;
     search->mDNode = oldDNode;
-    search->mVisited->pop_back();
+    search->mVisited.pop_back();
 }
 
-inline bool Solver::indexVisited(unsigned int bIndex, std::vector<unsigned int>* visited)
+inline bool Solver::indexVisited(unsigned int bIndex, std::vector<unsigned int>& visited)
 {
-    for (std::vector<unsigned int>::const_iterator iterator = visited->begin(), end = visited->end(); iterator != end; ++iterator)
+    for (std::vector<unsigned int>::const_iterator iterator = visited.begin(), end = visited.end(); iterator != end; ++iterator)
     {
         if (bIndex == *iterator)
         {

@@ -26,18 +26,11 @@ DictionaryNode::DictionaryNode(DictionaryNode* parent, char value) :
 
 DictionaryNode::~DictionaryNode()
 {
-    for (unsigned int i = 0; i < LETTER_COUNT; ++i)
-    {
-        if (mChildren[i])
-        {
-            delete mChildren[i];
-        }
-    }
 }
 
 DictionaryNode* Dictionary::getRoot()
 {
-    return mRoot;
+    return mRoot.get();
 }
 
 bool Dictionary::addWord(std::string wordString)
@@ -61,7 +54,7 @@ bool Dictionary::addWord(std::string wordString)
         }
     }
 
-    DictionaryNode* curNode = mRoot;
+    DictionaryNode* curNode = mRoot.get();
     //Construct our structs one letter at a time
     for (unsigned int i = 0; i < wordLength; ++i)
     {
@@ -71,33 +64,39 @@ bool Dictionary::addWord(std::string wordString)
         //Create the next node if it doesn't already exist
         if (!curNode->mChildren[letterIndex])
         {
-            curNode->mChildren[letterIndex] = new DictionaryNode(curNode, word[i]);
+
+            curNode->mChildren[letterIndex] = std::unique_ptr<DictionaryNode>(new  DictionaryNode(curNode, word[i]));
             curNode->mChildrenCount.fetch_add(1);
         }
-        curNode = curNode->mChildren[letterIndex];
+        curNode = curNode->mChildren[letterIndex].get();
     }
 
     //The last node must be marked as a word
     curNode->mIsWord = true;
+
+    if (wordLength > mMaxDepth)
+    {
+        mMaxDepth = wordLength;
+    }
 
     return true;
 }
 
 void Dictionary::outputResults(const std::string filename)
 {
-    std::vector<std::string>* foundWords = new std::vector<std::string>();
+    std::vector<std::string> foundWords;
 
     //Get all of the words from the dictionary
-    recursiveFindFound(mRoot, foundWords);
+    recursiveFindFound(mRoot.get(), foundWords);
 
-    std::sort(foundWords->begin(), foundWords->end());
+    std::sort(foundWords.begin(), foundWords.end());
 
     FILE* outfile;
     fopen_s(&outfile, filename.c_str(), "w");
     //Print out the number of words and then all of the words alphabetically
-    fprintf(outfile, "%d\n", (int)foundWords->size());
+    fprintf(outfile, "%d\n", (int)foundWords.size());
 
-    for (std::vector<std::string>::const_iterator iterator = foundWords->begin(), end = foundWords->end(); iterator != end; ++iterator)
+    for (std::vector<std::string>::const_iterator iterator = foundWords.begin(), end = foundWords.end(); iterator != end; ++iterator)
     {
         fprintf(outfile, "%s\n", (*iterator).c_str());
     }
@@ -123,21 +122,21 @@ void Dictionary::removeWord(DictionaryNode* node)
     }
 }
 
-void Dictionary::recursiveFindFound(DictionaryNode* curNode, std::vector<std::string>* foundWords)
+void Dictionary::recursiveFindFound(DictionaryNode* curNode, std::vector<std::string>& foundWords)
 {
     //Re-enable the dictionary if necessary
     curNode->mIsDisabled.store(false);
 
     if (curNode->mIsFound)
     {
-        foundWords->push_back(curNode->mWord);
+        foundWords.push_back(curNode->mWord);
         curNode->mIsFound = false;
     }
 
     int numChildren = 0;
     for (unsigned int i = 0; i < LETTER_COUNT; ++i)
     {
-        DictionaryNode* child = curNode->mChildren[i];
+        DictionaryNode* child = curNode->mChildren[i].get();
         if (child)
         {
             ++numChildren;
@@ -150,7 +149,7 @@ void Dictionary::recursiveFindFound(DictionaryNode* curNode, std::vector<std::st
 
 Dictionary::Dictionary(const std::string filename)
 {
-    mRoot = new DictionaryNode(nullptr, '0');
+    mRoot = std::unique_ptr<DictionaryNode>(new DictionaryNode(nullptr, '0'));
 
     //Add all the words!
     std::string line;
@@ -170,5 +169,4 @@ Dictionary::Dictionary(const std::string filename)
 
 Dictionary::~Dictionary()
 {
-    delete mRoot;
 }

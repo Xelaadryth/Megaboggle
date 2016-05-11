@@ -4,6 +4,7 @@
 #include <atomic>
 #include <fstream>
 #include <list>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -19,7 +20,7 @@ struct DictionaryNode
     bool mIsWord;
     bool mIsFound;
     std::atomic<int> mChildrenCount;
-    DictionaryNode* mChildren[LETTER_COUNT];
+    std::unique_ptr<DictionaryNode> mChildren[LETTER_COUNT];
     DictionaryNode* mParent;
     std::string mWord;
 };
@@ -35,8 +36,10 @@ public:
     void outputResults(const std::string filename);
     static void removeWord(DictionaryNode* node);
 
+    unsigned int mMaxDepth = 0;
+
 private:
     //Counts number found and resets dictionary to initial state
-    void recursiveFindFound(DictionaryNode* curNode, std::vector<std::string>* foundWords);
-    DictionaryNode* mRoot;
+    void recursiveFindFound(DictionaryNode* curNode, std::vector<std::string>& foundWords);
+    std::unique_ptr<DictionaryNode> mRoot;
 };
