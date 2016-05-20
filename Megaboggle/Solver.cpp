@@ -7,12 +7,20 @@ Search::Search(Dictionary& dictionary, DictionaryNode* dNode, const Board& board
     mBoard(board),
     mDictionary(dictionary)
 {
-    //TODO: mVisited = new char[mDictionary.mMaxDepth]();
-    mVisited.reserve(30);
+    //Need a terminating unsigned int in the final slot
+    unsigned int visitedLength = dictionary.mMaxDepth + 1;
+    mVisited = new unsigned int[visitedLength];
+
+    for (unsigned int i = 0; i < visitedLength; ++i)
+    {
+        //Use the maximum int as representative of invalid input, like a char* uses a null-terminator
+        mVisited[i] = -1;
+    }
 }
 
 Search::~Search()
 {
+    delete [] mVisited;
 }
 
 SolverThreadPool::SolverThreadPool(ThreadFunction fnc, int numWorkItems)
@@ -139,8 +147,15 @@ void Solver::recursiveSearch(Search* search)
         return;
     }
 
-    //Add the current board position to our visited list
-    search->mVisited.push_back(currentBIndex);
+    {
+        //Add the current board position to our visited list
+        unsigned int visitIndex = 0;
+        while (search->mVisited[visitIndex] != -1)
+        {
+            ++visitIndex;
+        }
+        search->mVisited[visitIndex] = currentBIndex;
+    }
 
     unsigned int x = currentBIndex % search->mBoard.mWidth;
     unsigned int y = currentBIndex / search->mBoard.mWidth;
@@ -199,14 +214,25 @@ void Solver::recursiveSearch(Search* search)
     
     search->mBIndex = currentBIndex;
     search->mDNode = oldDNode;
-    search->mVisited.pop_back();
+
+    {
+        unsigned int visitIndex = 0;
+        while (search->mVisited[visitIndex] != -1)
+        {
+            ++visitIndex;
+        }
+        if (visitIndex > 0)
+        {
+            search->mVisited[visitIndex - 1] = -1;
+        }
+    }
 }
 
-inline bool Solver::indexVisited(unsigned int bIndex, std::vector<unsigned int>& visited)
+inline bool Solver::indexVisited(unsigned int bIndex, unsigned int* visited)
 {
-    for (std::vector<unsigned int>::const_iterator iterator = visited.begin(), end = visited.end(); iterator != end; ++iterator)
+    for (unsigned int i = 0; visited[i] != -1; ++i)
     {
-        if (bIndex == *iterator)
+        if (bIndex == visited[i])
         {
             return true;
         }

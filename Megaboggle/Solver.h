@@ -25,7 +25,7 @@ struct Search
     DictionaryNode* mDNode;
     unsigned int mBIndex;
     const Board& mBoard;
-    std::vector<unsigned int> mVisited;
+    unsigned int* mVisited;
     Dictionary& mDictionary;
 };
 
@@ -63,7 +63,7 @@ private:
     //Depth-first search the calls checkSearch at every step
     static void recursiveSearch(Search* search);
     //Checks if an index is in the visited index list
-    static inline bool indexVisited(unsigned int bIndex, std::vector<unsigned int>& visited);
+    static inline bool indexVisited(unsigned int bIndex, unsigned int* visited);
 
     Dictionary& mDictionary;
     const Board& mBoard;
