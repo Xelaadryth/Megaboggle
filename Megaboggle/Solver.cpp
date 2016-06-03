@@ -29,15 +29,15 @@ SolverThreadPool::SolverThreadPool(ThreadFunction fnc, int numWorkItems)
     mNumWorkItems.store(numWorkItems - 1);
 }
 
-void SolverThreadPool::start(Dictionary& dictionary, const Board& board)
+void SolverThreadPool::Start(Dictionary& dictionary, const Board& board)
 {
     for (unsigned int i = 0; i != NUM_THREADS; ++i)
     {
-        mThreads[i] = std::thread(SolverThreadPool::startSolverWorker, this, &dictionary, &board);
+        mThreads[i] = std::thread(SolverThreadPool::StartSolverWorker, this, &dictionary, &board);
     }
 }
 
-void SolverThreadPool::join()
+void SolverThreadPool::Join()
 {
     for (unsigned int i = 0; i != NUM_THREADS; ++i)
     {
@@ -45,9 +45,9 @@ void SolverThreadPool::join()
     }
 }
 
-void SolverThreadPool::startSolverWorker(SolverThreadPool* threadPool, Dictionary* dictionary, const Board* board)
+void SolverThreadPool::StartSolverWorker(SolverThreadPool* threadPool, Dictionary* dictionary, const Board* board)
 {
-    DictionaryNode* root = dictionary->getRoot();
+    DictionaryNode* root = dictionary->GetRoot();
     //Re-use this vector so we only have to allocate once
     Search* search = new Search(*dictionary, root, *board, 0);
 
@@ -89,7 +89,7 @@ void SolverThreadPool::startSolverWorker(SolverThreadPool* threadPool, Dictionar
 Solver::Solver(Dictionary& dictionary, const Board& board)
     : mDictionary(dictionary)
     , mBoard(board)
-    , mThreadPool(Solver::recursiveSearch, BY_ROW ? board.mHeight : board.mWidth * board.mHeight)
+    , mThreadPool(Solver::RecursiveSearch, BY_ROW ? board.mHeight : board.mWidth * board.mHeight)
 {
 }
 
@@ -97,25 +97,25 @@ Solver::~Solver()
 {
 }
 
-void Solver::solve()
+void Solver::Solve()
 {
     //Start the thread pool on the work queue
-    mThreadPool.start(mDictionary, mBoard);
-    mThreadPool.join();
+    mThreadPool.Start(mDictionary, mBoard);
+    mThreadPool.Join();
 }
 
-void Solver::recursiveSearch(Search* search)
+void Solver::RecursiveSearch(Search* search)
 {
     unsigned int currentBIndex = search->mBIndex;
 
     //Already using this board node as part of our word
-    if (indexVisited(currentBIndex, search->mVisited))
+    if (IndexVisited(currentBIndex, search->mVisited))
     {
         return;
     }
 
     DictionaryNode* oldDNode = search->mDNode;
-    search->mDNode = oldDNode->mChildren[(int)(search->mBoard.mBoard[currentBIndex]) - 'a'].get();
+    search->mDNode = oldDNode->mChildren[(int)(search->mBoard.mBoard[currentBIndex]) - 'a'];
     //No dictionary entries remain along this path; either never existed or was disabled
     if (!search->mDNode || search->mDNode->mIsDisabled.load())
     {
@@ -134,7 +134,7 @@ void Solver::recursiveSearch(Search* search)
         if (!numChildren)
         {
             //Removing words saves us time later, especially for repetitive boards
-            Dictionary::removeWord(search->mDNode);
+            Dictionary::RemoveWord(search->mDNode);
             search->mDNode = oldDNode;
             return;
         }
@@ -165,51 +165,59 @@ void Solver::recursiveSearch(Search* search)
     bool hasDown = y < search->mBoard.mHeight - 1;
 
     //Look left: hasLeft == x > 0 == x since x is an unsigned int
-    if (x) {
+    if (x)
+    {
         search->mBIndex = currentBIndex - 1;
-        recursiveSearch(search);
+        RecursiveSearch(search);
 
         //Look up-left: hasUp == y > 0 == y since y is an unsigned int
-        if (y) {
+        if (y)
+        {
             search->mBIndex = currentBIndex - 1 - search->mBoard.mWidth;
-            recursiveSearch(search);
+            RecursiveSearch(search);
         }
 
         //Look down-left
-        if (hasDown) {
+        if (hasDown)
+        {
             search->mBIndex = currentBIndex - 1 + search->mBoard.mWidth;
-            recursiveSearch(search);
+            RecursiveSearch(search);
         }
     }
 
     //Look right
-    if (hasRight) {
+    if (hasRight)
+    {
         search->mBIndex = currentBIndex + 1;
-        recursiveSearch(search);
+        RecursiveSearch(search);
 
         //Look up-right
-        if (y) {
+        if (y)
+        {
             search->mBIndex = currentBIndex + 1 - search->mBoard.mWidth;
-            recursiveSearch(search);
+            RecursiveSearch(search);
         }
 
         //Look down-right
-        if (hasDown) {
+        if (hasDown)
+        {
             search->mBIndex = currentBIndex + 1 + search->mBoard.mWidth;
-            recursiveSearch(search);
+            RecursiveSearch(search);
         }
     }
 
     //Look up
-    if (y) {
+    if (y)
+    {
         search->mBIndex = currentBIndex - search->mBoard.mWidth;
-        recursiveSearch(search);
+        RecursiveSearch(search);
     }
 
     //Look down
-    if (hasDown) {
+    if (hasDown)
+    {
         search->mBIndex = currentBIndex + search->mBoard.mWidth;
-        recursiveSearch(search);
+        RecursiveSearch(search);
     }
     
     search->mBIndex = currentBIndex;
@@ -228,7 +236,7 @@ void Solver::recursiveSearch(Search* search)
     }
 }
 
-inline bool Solver::indexVisited(unsigned int bIndex, unsigned int* visited)
+inline bool Solver::IndexVisited(unsigned int bIndex, unsigned int* visited)
 {
     for (unsigned int i = 0; visited[i] != -1; ++i)
     {

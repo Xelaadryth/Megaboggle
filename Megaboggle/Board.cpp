@@ -14,10 +14,10 @@ Board::Board(const std::string filename)
         //Get a 1D list of all the letters in the board and store the height/width
         std::vector<char> charList;
 
-		unsigned int j;
+        unsigned int j;
         for (j = 0; std::getline(boardFile, line); ++j)
         {
-			size_t lineLength = line.length();
+            size_t lineLength = line.length();
 
             for (unsigned int lineIndex = 0; lineIndex < lineLength; lineIndex++)
             {
@@ -35,21 +35,21 @@ Board::Board(const std::string filename)
             }
         }
 
-		if (j > 0)
-		{
-			mHeight = j;
-		}
-		else
-		{
-			printf("Invalid board.\n");
-		}
+        if (j > 0)
+        {
+            mHeight = j;
+        }
+        else
+        {
+            printf("Invalid board.\n");
+        }
 
-		mBoard = new char[mHeight * mWidth]();
+        mBoard = new char[mHeight * mWidth]();
 
-		for (size_t i = 0, length = charList.size(); i < length; ++i)
-		{
-			mBoard[i] = charList[i];
-		}
+        for (size_t i = 0, length = charList.size(); i < length; ++i)
+        {
+            mBoard[i] = charList[i];
+        }
     }
     else
     {
@@ -59,5 +59,5 @@ Board::Board(const std::string filename)
 
 Board::~Board()
 {
-	delete mBoard;
+    delete mBoard;
 }

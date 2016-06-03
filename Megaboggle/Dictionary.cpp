@@ -26,14 +26,18 @@ DictionaryNode::DictionaryNode(DictionaryNode* parent, char value) :
 
 DictionaryNode::~DictionaryNode()
 {
+    for (unsigned int i = 0; i < LETTER_COUNT; ++i)
+    {
+        delete mChildren[i];
+    }
 }
 
-DictionaryNode* Dictionary::getRoot()
+DictionaryNode* Dictionary::GetRoot()
 {
-    return mRoot.get();
+    return mRoot;
 }
 
-bool Dictionary::addWord(std::string wordString)
+bool Dictionary::AddWord(std::string wordString)
 {
     size_t wordLength = wordString.length();
 
@@ -54,7 +58,7 @@ bool Dictionary::addWord(std::string wordString)
         }
     }
 
-    DictionaryNode* curNode = mRoot.get();
+    DictionaryNode* curNode = mRoot;
     //Construct our structs one letter at a time
     for (unsigned int i = 0; i < wordLength; ++i)
     {
@@ -65,10 +69,10 @@ bool Dictionary::addWord(std::string wordString)
         if (!curNode->mChildren[letterIndex])
         {
 
-            curNode->mChildren[letterIndex] = std::unique_ptr<DictionaryNode>(new  DictionaryNode(curNode, word[i]));
+            curNode->mChildren[letterIndex] = new DictionaryNode(curNode, word[i]);
             curNode->mChildrenCount.fetch_add(1);
         }
-        curNode = curNode->mChildren[letterIndex].get();
+        curNode = curNode->mChildren[letterIndex];
     }
 
     //The last node must be marked as a word
@@ -82,14 +86,15 @@ bool Dictionary::addWord(std::string wordString)
     return true;
 }
 
-void Dictionary::outputResults(const std::string filename)
+void Dictionary::OutputResults(const std::string filename)
 {
     std::vector<std::string> foundWords;
 
     //Get all of the words from the dictionary
-    recursiveFindFound(mRoot.get(), foundWords);
+    RecursiveFindFound(mRoot, foundWords);
 
-    std::sort(foundWords.begin(), foundWords.end());
+    //Should already be sorted
+    //std::sort(foundWords.begin(), foundWords.end());
 
     FILE* outfile;
     fopen_s(&outfile, filename.c_str(), "w");
@@ -105,7 +110,7 @@ void Dictionary::outputResults(const std::string filename)
 }
 
 //If we are a leaf node, then remove ourselves and decrement our parent's counter
-void Dictionary::removeWord(DictionaryNode* node)
+void Dictionary::RemoveWord(DictionaryNode* node)
 {
     //Multiple people can try to remove this node at the same time, but only one will succeed
     bool expected = false;
@@ -117,12 +122,12 @@ void Dictionary::removeWord(DictionaryNode* node)
         if (parent->mChildrenCount.fetch_sub(1) == 1 && !parent->mIsDisabled.load() && (!parent->mIsWord || (parent->mIsWord && parent->mIsFound)))
         {
             //If a node no longer has children and has nothing depending on it, then we can try to cascade remove that one too
-            removeWord(parent);
+            RemoveWord(parent);
         }
     }
 }
 
-void Dictionary::recursiveFindFound(DictionaryNode* curNode, std::vector<std::string>& foundWords)
+void Dictionary::RecursiveFindFound(DictionaryNode* curNode, std::vector<std::string>& foundWords)
 {
     //Re-enable the dictionary if necessary
     curNode->mIsDisabled.store(false);
@@ -136,11 +141,11 @@ void Dictionary::recursiveFindFound(DictionaryNode* curNode, std::vector<std::st
     int numChildren = 0;
     for (unsigned int i = 0; i < LETTER_COUNT; ++i)
     {
-        DictionaryNode* child = curNode->mChildren[i].get();
+        DictionaryNode* child = curNode->mChildren[i];
         if (child)
         {
             ++numChildren;
-            recursiveFindFound(child, foundWords);
+            RecursiveFindFound(child, foundWords);
         }
     }
 
@@ -149,7 +154,7 @@ void Dictionary::recursiveFindFound(DictionaryNode* curNode, std::vector<std::st
 
 Dictionary::Dictionary(const std::string filename)
 {
-    mRoot = std::unique_ptr<DictionaryNode>(new DictionaryNode(nullptr, '0'));
+    mRoot = new DictionaryNode(nullptr, '0');
 
     //Add all the words!
     std::string line;
@@ -158,7 +163,7 @@ Dictionary::Dictionary(const std::string filename)
     {
         while (std::getline(dictionaryFile, line))
         {
-            addWord(line);
+            AddWord(line);
         }
     }
     else
@@ -169,4 +174,5 @@ Dictionary::Dictionary(const std::string filename)
 
 Dictionary::~Dictionary()
 {
+    delete mRoot;
 }

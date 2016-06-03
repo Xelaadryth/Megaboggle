@@ -2,8 +2,11 @@
 
 #include <string>
 
-struct CommandLineParameters
+class CommandLineParameters
 {
+public:
+    CommandLineParameters(int argc, char** argv);
+
     std::string mDictPath = "";
     std::string mBoardPath = "";
     std::string mOutfile = "";
@@ -11,6 +14,4 @@ struct CommandLineParameters
     unsigned int mGenerateBoardSize = 0;
     bool mHelp = false;
     bool mVerbose = false;
-
-    CommandLineParameters(int argc, char** argv);
 };

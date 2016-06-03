@@ -37,11 +37,11 @@ public:
     SolverThreadPool(ThreadFunction fnc, int numWorkItems);
 
     //Must fill stack with tasks before starting, not smart enough to work with dynamically produced work
-    void start(Dictionary& dictionary, const Board& board);
-    void join();
+    void Start(Dictionary& dictionary, const Board& board);
+    void Join();
 
 private:
-    static void startSolverWorker(SolverThreadPool* threadPool, Dictionary* dictionary, const Board* board);
+    static void StartSolverWorker(SolverThreadPool* threadPool, Dictionary* dictionary, const Board* board);
 
     std::thread mThreads[NUM_THREADS];
 
@@ -57,13 +57,13 @@ public:
     Solver(Dictionary& dictionary, const Board& board);
     ~Solver();
 
-    void solve();
+    void Solve();
 
 private:
     //Depth-first search the calls checkSearch at every step
-    static void recursiveSearch(Search* search);
+    static void RecursiveSearch(Search* search);
     //Checks if an index is in the visited index list
-    static inline bool indexVisited(unsigned int bIndex, unsigned int* visited);
+    static inline bool IndexVisited(unsigned int bIndex, unsigned int* visited);
 
     Dictionary& mDictionary;
     const Board& mBoard;

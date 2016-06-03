@@ -14,7 +14,7 @@
 #include "Timer.h"
 
 
-void run(Dictionary& dictionary, CommandLineParameters& params)
+void Run(Dictionary& dictionary, CommandLineParameters& params)
 {
     if (params.mVerbose)
     {
@@ -34,7 +34,7 @@ void run(Dictionary& dictionary, CommandLineParameters& params)
     }
 
     Timer solveTimer;
-    solver.solve();
+    solver.Solve();
     printf("%f milliseconds\n", solveTimer.stop());
 
     if (params.mVerbose)
@@ -42,7 +42,7 @@ void run(Dictionary& dictionary, CommandLineParameters& params)
         printf("\nFormatting output for results...");
     }
     Timer sortTimer;
-    dictionary.outputResults(params.mOutfile);
+    dictionary.OutputResults(params.mOutfile);
     if (params.mVerbose)
     {
         printf("%f milliseconds\n", sortTimer.stop());
@@ -54,7 +54,8 @@ int main(int argc, char** argv)
 {
     {
         CommandLineParameters params(argc, argv);
-        if (params.mHelp || params.mDictPath == "" || params.mBoardPath == "" || params.mOutfile == "") {
+        if (params.mHelp || params.mDictPath == "" || params.mBoardPath == "" || params.mOutfile == "")
+        {
             _getch();
             return -1;
         }
@@ -77,41 +78,42 @@ int main(int argc, char** argv)
                 printf("\n    ----------------------------\n\n");
             }
 
-            run(dictionary, params);
+            Run(dictionary, params);
         }
 
+        //TODO: Make this a command line argument function
         //Generate a randomized board
-        if (params.mGenerateBoardSize)
-        {
-            if (params.mVerbose)
-            {
-                printf("\nGenerating board at C:\\board.csv...");
-            }
-            Timer generateTimer;
+        //if (params.mGenerateBoardSize)
+        //{
+        //    if (params.mVerbose)
+        //    {
+        //        printf("\nGenerating board at C:\\board.csv...");
+        //    }
+        //    Timer generateTimer;
 
-            FILE* outfile;
-            fopen_s(&outfile, "C:\\board.csv", "w");
+        //    FILE* outfile;
+        //    fopen_s(&outfile, "C:\\board.csv", "w");
 
-            for (unsigned int y = 0; y < params.mGenerateBoardSize; ++y)
-            {
-                for (unsigned int x = 0; x < params.mGenerateBoardSize - 1; ++x)
-                {
-                    fprintf(outfile, "%c,", 'a' + rand() % 26);
-                }
-                fprintf(outfile, "%c\n", 'a' + rand() % 26);
-            }
+        //    for (unsigned int y = 0; y < params.mGenerateBoardSize; ++y)
+        //    {
+        //        for (unsigned int x = 0; x < params.mGenerateBoardSize - 1; ++x)
+        //        {
+        //            fprintf(outfile, "%c,", 'a' + rand() % 26);
+        //        }
+        //        fprintf(outfile, "%c\n", 'a' + rand() % 26);
+        //    }
 
-            fclose(outfile);
+        //    fclose(outfile);
 
-            if (params.mVerbose)
-            {
-                printf("%f milliseconds\n", generateTimer.stop());
-            }
-        }
+        //    if (params.mVerbose)
+        //    {
+        //        printf("%f milliseconds\n", generateTimer.stop());
+        //    }
+        //}
     }
 
     //Print out memory leaks
-    /*_CrtDumpMemoryLeaks();*/
+    //_CrtDumpMemoryLeaks();
 
     printf("\nPress any key to exit the program.\n");
     _getch();
